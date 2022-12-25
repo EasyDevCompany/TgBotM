@@ -52,11 +52,17 @@ class JobApplication(Base):
         edit_some_moving = "edit_some_moving"  # Редактирование некорректного перемещения
         adjustment_of_supplies = "adjustment_of_supplies"  # Корректировка поставок
 
+    class ApplicationStatus(str, enum.Enum):
+        pending = "pending"
+        success = "success"
+        return_application = "return_application"
+
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("telegram_user.id"))
     user = relationship("TelegramUser")
     date = Column(DateTime, default=datetime.utcnow)
     role = Column(Enum(Role))
+    application_status = Column(Enum(ApplicationStatus), default=ApplicationStatus.pending)
     request_answered = Column(Enum(RequestAnswered))
     request_type = Column(Enum(RequestType))
     field_one = Column(String)

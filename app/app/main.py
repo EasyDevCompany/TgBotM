@@ -8,6 +8,8 @@ from app import middlewares
 
 from app.handlers import start
 
+start.register_start_handler(dp=dp)
+
 
 def on_startup(dispatcher: Dispatcher):
     middlewares.setup(dp=dispatcher)
