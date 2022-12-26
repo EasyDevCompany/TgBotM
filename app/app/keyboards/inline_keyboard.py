@@ -8,6 +8,8 @@ start_work = InlineKeyboardMarkup().add(
         text="Начать работу",
         callback_data="start_work"
     )
+)
+
 
 def choose_your_role():
     keyboard = InlineKeyboardMarkup(resize_keyboard=True)

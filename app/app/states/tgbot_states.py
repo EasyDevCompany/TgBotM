@@ -2,8 +2,9 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
 class BaseState(StatesGroup):
-    name = State()
+    fio = State()
     role = State()
+    request_type = State()
 
 
 class EditMove(BaseState):
