@@ -10,6 +10,18 @@ start_work = types.InlineKeyboardMarkup().add(
 
 
 # клавиатура с ролями
+from aiogram import types
+
+
+start_work = types.InlineKeyboardMarkup().add(
+    types.InlineKeyboardButton(
+        text="Начать работу",
+        callback_data="start_work"
+    )
+)
+
+
+# клавиатура с ролями
 
 accountant = types.InlineKeyboardButton(text="Бухгалтер", callback_data="accountant")
 storekeeper = types.InlineKeyboardButton(text="Кладовщик", callback_data="storekeeper")
@@ -83,4 +95,25 @@ list_button_requests_callback = (
 )
 
 row_requests = (types.InlineKeyboardButton(text, callback_data=data) for text, data in list_button_requests_callback)
-request_button_markup.add(*row_roles)
+request_button_markup.add(*row_requests)
+
+# клавиатура для запроса служебной записки
+
+file_official_notes = types.InlineKeyboardMarkup().add(
+    types.InlineKeyboardButton(
+        text="Файл служебной записки",
+        callback_data="file_official_notes"
+    )
+)
+
+# клавиатура финала
+
+ans_yes_no = types.InlineKeyboardMarkup(row_width=1)
+
+text_and_data = (
+    ('Да', 'yes'),
+    ('Нет', 'no'),
+)
+
+ans = (types.InlineKeyboardButton(text, callback_data=data) for text, data in text_and_data)
+ans_yes_no.add(*ans)
