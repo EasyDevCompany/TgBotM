@@ -1,4 +1,4 @@
-from app.core.config import settings
+from core.config import settings
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 

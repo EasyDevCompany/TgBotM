@@ -1,6 +1,10 @@
+import os
 from typing import Any, Dict, Optional
 from pydantic import BaseSettings, PostgresDsn, validator
 from loguru import logger
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class Settings(BaseSettings):
@@ -10,7 +14,8 @@ class Settings(BaseSettings):
     POSTGRES_PORT: str = "5432"
     POSTGRES_DB: str
 
-    BOT_TOKEN: str
+    BOT_TOKEN: str 
+
 
     SYNC_SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
 
@@ -31,4 +36,8 @@ class Settings(BaseSettings):
         case_sensitive = True
 
 
-settings = Settings()
+settings = Settings(POSTGRES_USER=os.getenv("POSTGRES_USER"),
+                    POSTGRES_PASSWORD=os.getenv("POSTGRES_PASSWORD"),
+                    POSTGRES_SERVER=os.getenv("POSTGRES_SERVER"),
+                    POSTGRES_DB=os.getenv("POSTGRES_DB"),
+                    BOT_TOKEN=os.getenv('TOKEN'))

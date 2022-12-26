@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "casino-bot"
+name = "tgbotm"
 version = "1.0.0"
-description = "Casino bot in telegram"
+description = "Tech. support and administration bot"
 authors = ["Axel791 <HS.Kazakov@mail.ru>"]
 readme = "README.md"
-packages = [{include = "casino_bot"}]
+packages = [{include = "tgbotm"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -15,6 +15,8 @@ psycopg2 = "^2.9.5"
 sqlalchemy = "^1.4.45"
 flask-admin = "^1.6.0"
 loguru = "^0.6.0"
+aiogram-inline-paginations = "^0.1.9"
+python-dotenv = "^0.21.0"
 
 
 [build-system]
