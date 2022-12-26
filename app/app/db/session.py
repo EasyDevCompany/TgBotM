@@ -2,7 +2,7 @@ from loguru import logger
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy import create_engine
 from contextvars import ContextVar
-from app.db.base import Base
+from db.base import Base
 
 from app.models.telegram_user import TelegramUser
 from app.models.application import Application

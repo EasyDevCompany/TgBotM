@@ -1,6 +1,7 @@
+import os
 from dependency_injector import containers, providers
-from app.core.config import Settings
-from app.db.session import SyncSession
+from core.config import Settings
+from db.session import SyncSession
 
 from app.models.telegram_user import TelegramUser
 from app.models.application import Application
@@ -14,7 +15,12 @@ from app.services.application import ApplicationService
 
 class Container(containers.DeclarativeContainer):
 
-    config = providers.Singleton(Settings)
+    config = providers.Singleton(Settings,
+                                 POSTGRES_USER='postgres',
+                                 POSTGRES_PASSWORD='postgres',
+                                 POSTGRES_SERVER='localhost',
+                                 POSTGRES_DB='staff_bot',
+                                 BOT_TOKEN=os.getenv('TOKEN'))
     db = providers.Singleton(SyncSession, db_url=config.provided.SYNC_SQLALCHEMY_DATABASE_URI)
 
     repository_telegram_user = providers.Singleton(RepositoryTelegramUser, model=TelegramUser, session=db)

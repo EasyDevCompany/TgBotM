@@ -34,6 +34,7 @@ administrator.adjustment_of_supplies.register(dp=dp)
 # def on_startup(dispatcher: Dispatcher):
 #     middlewares.setup(dp=dispatcher)
 
+start.register(dp)
 
 if __name__ == "__main__":
     container = Container()

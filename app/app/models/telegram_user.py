@@ -1,6 +1,6 @@
 import enum
 
-from app.db.base_class import Base
+from db.base_class import Base
 from datetime import datetime
 from sqlalchemy import (
     Column,
