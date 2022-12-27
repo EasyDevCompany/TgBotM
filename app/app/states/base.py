@@ -16,3 +16,10 @@ class ChangeStatusApplication(StatesGroup):
     check_result = State()
     finaly_result = State()
 
+
+class AddConversionFactorByName(StatesGroup):
+    choose_request = State()
+    specify_name_factor = State()
+    old_new_unit = State()
+    ratio_old_to_new_unit = State()
+    finaly = State()

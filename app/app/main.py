@@ -2,10 +2,12 @@ from aiogram.dispatcher.filters import CommandStart
 from aiogram.utils import executor
 from aiogram import Dispatcher, types
 
+from app.app.handlers.add_conversion_factor_by_name import add_conversion_factor, specify_name_factor, old_new_unit, \
+    ratio_old_to_new_unit
 from app.app.handlers.form_change_status_application import name_invalid, name, role, type_application, \
     change_status_application, added_file, write_number_application, write_number_application_invalid, \
-    write_status_application, write_status_application_invalid, check_result, finally_result
-from app.app.states.base import BaseStates, ChangeStatusApplication
+    write_status_application, write_status_application_invalid, check_result, finally_result, cancel
+from app.app.states.base import BaseStates, ChangeStatusApplication, AddConversionFactorByName
 from loader import dp
 
 from app.core.container import Container
@@ -39,7 +41,11 @@ def register_handler(dp: Dispatcher):
                                 state=ChangeStatusApplication.check_result)
     dp.register_message_handler(check_result, state=ChangeStatusApplication.check_result)
     dp.register_callback_query_handler(finally_result, state=ChangeStatusApplication.finaly_result)
-
+    dp.register_callback_query_handler(add_conversion_factor, state=AddConversionFactorByName.choose_request)
+    dp.register_message_handler(specify_name_factor, state=AddConversionFactorByName.specify_name_factor)
+    dp.register_message_handler(old_new_unit, state=AddConversionFactorByName.old_new_unit)
+    dp.register_message_handler(ratio_old_to_new_unit, state=AddConversionFactorByName.ratio_old_to_new_unit)
+    dp.register_callback_query_handler(finally_result, state=AddConversionFactorByName.finaly)
 
 
 if __name__ == "__main__":
