@@ -23,6 +23,7 @@ def on_startup(dispatcher: Dispatcher):
 def register_handler(dp: Dispatcher):
     dp.register_message_handler(start, CommandStart())
     dp.register_callback_query_handler(name)
+    dp.register_callback_query_handler(cancel, text='cancel', state='*')
     dp.register_message_handler(name_invalid, lambda message: message.text.isdigit(), state=BaseStates.fio)
     dp.register_message_handler(role, state=BaseStates.fio)
     dp.register_callback_query_handler(type_application, state=BaseStates.role)
@@ -38,6 +39,7 @@ def register_handler(dp: Dispatcher):
                                 state=ChangeStatusApplication.check_result)
     dp.register_message_handler(check_result, state=ChangeStatusApplication.check_result)
     dp.register_callback_query_handler(finally_result, state=ChangeStatusApplication.finaly_result)
+
 
 
 if __name__ == "__main__":

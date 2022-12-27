@@ -1,6 +1,5 @@
 from aiogram import types
 
-
 start_work = types.InlineKeyboardMarkup().add(
     types.InlineKeyboardButton(
         text="Начать работу",
@@ -44,6 +43,7 @@ list_button_roles_callback = (
     ("Утверждающий счета",  'account_approve'),
     ("Руководитель отдела", 'project_manager'),
     ("Начальник Административно Хозяйственного управления", 'head_of_the_administrative_and_economic_department'),
+    ("Отмена", "cancel"),
 )
 row_roles = (types.InlineKeyboardButton(text, callback_data=data) for text, data in list_button_roles_callback)
 role_button_markup.add(*row_roles)
@@ -80,17 +80,17 @@ list_button_requests_callback = (
     ("Открытие доступов Эдо для сотрудников",  'open_edo'),
     ("Редактирование некорректного перемещения", 'edit_some_moving'),
     ("Корректировка поставок", 'adjustment_of_supplies'),
+    ("Отмена", "cancel"),
 )
 
 row_requests = (types.InlineKeyboardButton(text, callback_data=data) for text, data in list_button_requests_callback)
 request_button_markup.add(*row_requests)
 
 
-file_official_notes = types.InlineKeyboardMarkup().add(
-    types.InlineKeyboardButton(
-        text="Добавить файл служебной записки",
-        callback_data="file_official_notes"
-    )
+file_official_notes = types.InlineKeyboardMarkup(row_width=1).add(
+    types.InlineKeyboardButton(text="Добавить файл служебной записки", callback_data="file_official_notes"),
+    types.InlineKeyboardButton(text="Отмена", callback_data="cancel"),
+
 )
 
 ans_yes_no = types.InlineKeyboardMarkup(row_width=1)
@@ -98,8 +98,10 @@ ans_yes_no = types.InlineKeyboardMarkup(row_width=1)
 text_and_data = (
     ('Да', 'yes'),
     ('Нет', 'no'),
+    ("Отмена", "cancel"),
 )
 
 ans = (types.InlineKeyboardButton(text, callback_data=data) for text, data in text_and_data)
 ans_yes_no.add(*ans)
+
 

@@ -109,3 +109,10 @@ async def finally_result(query: types.CallbackQuery, state: FSMContext):
         await state.finish()
         await query.message.answer("Отредактируйте пункты", reply_markup=start_work)
 
+
+async def cancel(query: types.CallbackQuery, state: FSMContext):
+    answer_data = query.data
+    if answer_data == 'cancel':
+        await state.finish()
+        await query.message.answer("Начните заново", reply_markup=start_work)
+        await query.answer()
