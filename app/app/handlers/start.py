@@ -88,10 +88,19 @@ async def test_func(
     )
 
 
+@dp.callback_query_handler(text='exit', state='*')
+async def cancel(query: types. CallbackQuery, state: FSMContext):
+    await bot.delete_message(query.message.chat.id, query.message.message_id)
+    await state.finish()
+    await query.message.answer(const.START_MESSAGE, reply_markup=kb.start_work)
+    await query.answer()
+
+
 @inject
 async def start(
         message: types.Message,
-        tg_user_service: TelegramUserService = Provide[Container.telegram_user_service]
+        tg_user_service: TelegramUserService = Provide[
+            Container.telegram_user_service]
 ):
     await tg_user_service.get_or_create(
         obj_in={
