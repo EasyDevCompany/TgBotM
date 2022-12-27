@@ -4,11 +4,9 @@ version = "1.0.0"
 description = "Tech. support and administration bot"
 authors = ["Axel791 <HS.Kazakov@mail.ru>"]
 readme = "README.md"
-packages = [{include = "tgbotm"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-aiogram = "^2.23.1"
 pydantic = "^1.10.2"
 dependency-injector = "^4.41.0"
 psycopg2 = "^2.9.5"

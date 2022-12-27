@@ -16,10 +16,10 @@ from app.services.application import ApplicationService
 class Container(containers.DeclarativeContainer):
 
     config = providers.Singleton(Settings,
-                                 POSTGRES_USER='postgres',
-                                 POSTGRES_PASSWORD='postgres',
-                                 POSTGRES_SERVER='localhost',
-                                 POSTGRES_DB='staff_bot',
+                                 POSTGRES_USER=os.getenv("POSTGRES_USER"),
+                                 POSTGRES_PASSWORD=os.getenv("POSTGRES_PASSWORD"),
+                                 POSTGRES_SERVER=os.getenv("POSTGRES_SERVER"),
+                                 POSTGRES_DB=os.getenv("POSTGRES_DB"),
                                  BOT_TOKEN=os.getenv('TOKEN'))
     db = providers.Singleton(SyncSession, db_url=config.provided.SYNC_SQLALCHEMY_DATABASE_URI)
 

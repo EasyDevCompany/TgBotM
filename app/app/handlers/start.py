@@ -8,8 +8,8 @@ from app.core.container import Container
 from app.models.application import Application
 from app.services.application import ApplicationService
 
-from app.models.telegram_user import TelegramUser
-from app.services.tg_user_service import TelegramUserService
+from models.telegram_user import TelegramUser
+from services.tg_user_service import TelegramUserService
 
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
