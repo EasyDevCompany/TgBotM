@@ -33,7 +33,7 @@ class middleware():
         self.app = app
 
     def __call__(self, environ, start_response):
-        scope.set(str(uuid4()))        
+        scope.set(str(uuid4()))
         try:
             return self.app(environ, start_response)
         except:
@@ -46,7 +46,7 @@ class middleware():
 secureApp.wsgi_app = middleware(secureApp.wsgi_app)
 
 
-#settings for auth
+# settings for auth
 # @login.user_loader
 # def load_user(user_id):
 #     return sync_session.execute(
@@ -55,7 +55,8 @@ secureApp.wsgi_app = middleware(secureApp.wsgi_app)
 
 
 # create administrator
-admin = Admin(secureApp, name='Admin', base_template='my_master.html', template_mode='bootstrap4')
+admin = Admin(secureApp, name='Admin',
+              base_template='my_master.html', template_mode='bootstrap4')
 # Create a ModelView to add to our administrative interface
 admin.add_view(TelegramUserView(TelegramUser, session.session))
 admin.add_view(ApplicationView(JobApplication, session.session))
