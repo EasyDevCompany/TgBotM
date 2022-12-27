@@ -44,7 +44,8 @@ class OpenAcs(BaseStates):
     note = State()
     staff_name = State()
     what_acs = State()
-    role = State()
+    staff_role = State()
+    another_role = State()
     for_what = State()
     obj_name = State()
 
@@ -57,6 +58,7 @@ class EditMoveAdm(BaseStates):
     storage_in = State()
     status = State()
     reason = State()
+    another_reason = State()
     description = State()
 
 
@@ -66,5 +68,6 @@ class EditShpmnt(BaseStates):
     number_invoice = State()
     storage = State()
     what_edit = State()
+    another_what_edit = State()
     description = State()
     extra_files = State()

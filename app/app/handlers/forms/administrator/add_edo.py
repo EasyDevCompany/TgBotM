@@ -2,37 +2,43 @@ from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 import keyboards.inline_keyboard as kb
 from states.tgbot_states import AddObjAdm
-from loader import dp
+from loader import dp, bot
+from utils import const
 
 
 async def get_note(message: types.Message, state: FSMContext):
     await state.update_data(note=message.document.file_id)
     await message.answer(
-        'Укажите название объекта, который необходимо добавить: ')
+        'Укажите название объекта, который необходимо добавить: ',
+        reply_markup=kb.exit_kb())
     await state.set_state(AddObjAdm.obj_name)
 
 
 async def get_obj_name(message: types.Message, state: FSMContext):
     await state.update_data(obj_name=message.text)
-    await message.answer('Укажите титул объекта: ')
+    await message.answer('Укажите титул объекта: ', reply_markup=kb.exit_kb())
     await state.set_state(AddObjAdm.title)
 
 
 async def get_title(message: types.Message, state: FSMContext):
     await state.update_data(title=message.text)
+    new_kb = kb.storage_kb().add(kb.exit_button)
     await message.answer('Укажите склад объекта:',
-                         reply_markup=kb.storage_kb())
+                         reply_markup=new_kb)
     await state.set_state(AddObjAdm.storage)
 
 
 @dp.callback_query_handler(state=AddObjAdm.storage)
 async def get_storage(query: types.CallbackQuery, state: FSMContext):
+    await bot.delete_message(query.message.chat.id, query.message.message_id)
     if query.data == 'exist_storage':
-        await query.message.answer('Укажите склад: ')
+        await query.message.answer('Укажите склад: ',
+                                   reply_markup=kb.exit_kb())
         await state.set_state(AddObjAdm.exist_storage)
     elif query.data == 'new_storage':
         await query.message.answer('Укажите название нового склада, '
-                                   'Ф.И.О ответственного лица и титул')
+                                   'Ф.И.О ответственного лица и титул',
+                                   reply_markup=kb.exit_kb())
         await state.set_state(AddObjAdm.if_new)
 
 
@@ -44,6 +50,7 @@ async def exist_storage(message: types.Message, state: FSMContext):
 async def if_new(message: types.Message, state: FSMContext):
     await state.update_data(storage=message.text)
     print(await state.get_data())
+    await message.answer(const.START_MESSAGE, reply_markup=kb.start_work)
 
 
 def register(dp: Dispatcher):

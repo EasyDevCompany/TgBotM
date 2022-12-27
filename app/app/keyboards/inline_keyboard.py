@@ -10,6 +10,10 @@ start_work = InlineKeyboardMarkup().add(
 )
 
 
+exit_button = InlineKeyboardButton(text='Отмена', callback_data="exit")
+skip_button = InlineKeyboardButton(text='Пропустить', callback_data='skip')
+
+
 def choose_your_role():
     keyboard = InlineKeyboardMarkup(resize_keyboard=True)
     b1 = InlineKeyboardButton(text='Бухгалтер', callback_data='Бухгалтер')
@@ -276,4 +280,72 @@ def storage_kb():
     b2 = InlineKeyboardButton(text='Новый склад', callback_data='new_storage')
     keyboard.row(b1)
     keyboard.row(b2)
+    return keyboard
+
+
+def exit_kb():
+    keyboard = InlineKeyboardMarkup(resize_keyboard=True)
+    keyboard.row(exit_button)
+    return keyboard
+
+
+def status_kb():
+    keyboard = InlineKeyboardMarkup(resize_keyboard=True)
+    b1 = InlineKeyboardButton(text='Выдан', callback_data='Выдан')
+    b2 = InlineKeyboardButton(text='Принят', callback_data='Принят')
+    keyboard.row(b1)
+    keyboard.row(b2)
+    return keyboard
+
+
+def reason_kb():
+    keyboard = InlineKeyboardMarkup(resize_keyboard=True)
+    b1 = InlineKeyboardButton(text='Выбрано неверное наименование',
+                              callback_data='Неверное имя')
+    b2 = InlineKeyboardButton(text='Указан неверный объём',
+                              callback_data='Неверный объём')
+    b3 = InlineKeyboardButton(text='Добавлены не соответствующие файлы',
+                              callback_data='Некорректные файлы')
+    b4 = InlineKeyboardButton(text='Перемещение оформили не на тот склад',
+                              callback_data='Не тот склад')
+    b5 = InlineKeyboardButton(text='Другое',
+                              callback_data='Другое')
+    keyboard.row(b1)
+    keyboard.row(b2)
+    keyboard.row(b3)
+    keyboard.row(b4)
+    keyboard.row(b5)
+    return keyboard
+
+
+def what_edit():
+    keyboard = InlineKeyboardMarkup(resize_keyboard=True)
+    b1 = InlineKeyboardButton(text='Выбрано неверное наименование',
+                              callback_data='Неверное имя')
+    b2 = InlineKeyboardButton(text='Указан неверный объём',
+                              callback_data='Неверный объём')
+    b3 = InlineKeyboardButton(text='Выбран неправильный склад',
+                              callback_data='Неправильный склад')
+    b4 = InlineKeyboardButton(text='Указана неверная дата',
+                              callback_data='Неверная дата')
+    b5 = InlineKeyboardButton(text='Указан неверный поставщик',
+                              callback_data='Неверный поставщик')
+    b6 = InlineKeyboardButton(text='Указаны неверные дата и номер накладной',
+                              callback_data='Неверные дата и накладная')
+    b7 = InlineKeyboardButton(text='Прикреплена неверная накладная',
+                              callback_data='Неверная накладная')
+    b8 = InlineKeyboardButton(
+        text='Прикреплён неверный паспорт/сертификат качества',
+        callback_data='Неверный паспорт/сертификат')
+    b9 = InlineKeyboardButton(text='Другое',
+                              callback_data='Другое')
+    keyboard.row(b1)
+    keyboard.row(b2)
+    keyboard.row(b3)
+    keyboard.row(b4)
+    keyboard.row(b5)
+    keyboard.row(b6)
+    keyboard.row(b7)
+    keyboard.row(b8)
+    keyboard.row(b9)
     return keyboard

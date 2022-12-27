@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     POSTGRES_PORT: str = "5432"
     POSTGRES_DB: str
 
-    BOT_TOKEN: str 
+    BOT_TOKEN: str
 
 
     SYNC_SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
@@ -36,8 +36,4 @@ class Settings(BaseSettings):
         case_sensitive = True
 
 
-settings = Settings(POSTGRES_USER=os.getenv("POSTGRES_USER"),
-                    POSTGRES_PASSWORD=os.getenv("POSTGRES_PASSWORD"),
-                    POSTGRES_SERVER=os.getenv("POSTGRES_SERVER"),
-                    POSTGRES_DB=os.getenv("POSTGRES_DB"),
-                    BOT_TOKEN=os.getenv('TOKEN'))
+settings = Settings(BOT_TOKEN=os.getenv('TOKEN'))

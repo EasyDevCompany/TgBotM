@@ -15,6 +15,9 @@ start.register_start_handler(dp=dp)
 moderator.add_subobject.register(dp=dp)
 moderator.add_material.register(dp=dp)
 administrator.add_edo.register(dp=dp)
+administrator.open_edo.register(dp=dp)
+administrator.edit_some_moving.register(dp=dp)
+administrator.adjustment_of_supplies.register(dp=dp)
 
 
 def on_startup(dispatcher: Dispatcher):
