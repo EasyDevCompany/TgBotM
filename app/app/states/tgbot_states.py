@@ -114,7 +114,7 @@ class EditViewWork(BaseStates):
 
 
 class AddViewWork(BaseStates):
-    edit_sub_object = State()
-    edit_type_work = State()
-    edit_sort = State()
-    edit_sub_systems = State()
+    sub_object = State()
+    type_work = State()
+    sort = State()
+    subsystems = State()

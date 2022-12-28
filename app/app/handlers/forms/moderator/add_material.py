@@ -49,13 +49,6 @@ async def get_obj(message: types.Message, state: FSMContext):
     await state.set_state(AddMat.sure)
 
 
-@dp.callback_query_handler(text='edit', state=AddMat.sure)
-async def edit_data(query: types.CallbackQuery, state: FSMContext):
-    await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await query.message.answer('Выберите номер пункта для корректировки: ',
-                               reply_markup=kb.choose_number())
-
-
 def register(dp: Dispatcher):
     dp.register_message_handler(get_note,
                                 state=AddMat.note, content_types=['document'])

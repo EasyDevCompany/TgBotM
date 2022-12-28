@@ -26,11 +26,11 @@ async def get_ratio(message: types.Message, state: FSMContext):
     await state.set_state(AddCoef.sure)
 
 
-@dp.callback_query_handler(text='edit', state=AddCoef.sure)
-async def edit_data(query: types.CallbackQuery, state: FSMContext):
-    await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await query.message.answer('Выберите номер пункта для корректировки: ',
-                               reply_markup=kb.choose_number())
+# @dp.callback_query_handler(text='edit', state=AddCoef.sure)
+# async def edit_data(query: types.CallbackQuery, state: FSMContext):
+#     await bot.delete_message(query.message.chat.id, query.message.message_id)
+#     await query.message.answer('Выберите номер пункта для корректировки: ',
+#                                reply_markup=kb.choose_number())
 
 
 def register(dp: Dispatcher):

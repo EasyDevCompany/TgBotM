@@ -14,6 +14,14 @@ exit_button = InlineKeyboardButton(text='Отмена', callback_data="exit")
 skip_button = InlineKeyboardButton(text='Пропустить', callback_data='skip')
 
 
+def genmarkup(data):
+    keyboard = InlineKeyboardMarkup()
+    keyboard.row_width = 1
+    for i in range(1, len(data) + 1):
+        keyboard.add(InlineKeyboardButton(i, callback_data=i))
+    return keyboard
+
+
 def choose_your_role():
     keyboard = InlineKeyboardMarkup(resize_keyboard=True)
     b1 = InlineKeyboardButton(text='Бухгалтер', callback_data='Бухгалтер')

@@ -25,6 +25,16 @@ async def cancel(query: types. CallbackQuery, state: FSMContext):
     await query.answer()
 
 
+@dp.callback_query_handler(text='edit', state='*')
+async def edit_data(query: types.CallbackQuery, state: FSMContext):
+    await bot.delete_message(query.message.chat.id, query.message.message_id)
+    data = await state.get_data()
+    print(len(data))
+    print(data)
+    await query.message.answer('Выберите номер пункта для корректировки: ',
+                               reply_markup=kb.genmarkup(data=data))
+
+
 @inject
 async def start(
         message: types.Message,
@@ -90,7 +100,7 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
     elif query.data == 'add_type_work':
         await query.message.answer(const.ADD_TYPE_WORK)
         await query.message.answer(const.SELECT_SUBOBJECT, reply_markup=kb.exit_kb())
-        await state.set_state(my_states.AddViewWork.edit_sub_object)
+        await state.set_state(my_states.AddViewWork.sub_object)
     elif query.data == 'add_coef':
         await query.message.answer(const.CONVERSION_FACTOR)
         await query.message.answer(const.UPDATE_COEF, reply_markup=kb.exit_kb())

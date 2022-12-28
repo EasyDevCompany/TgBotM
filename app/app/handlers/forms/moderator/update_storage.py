@@ -21,8 +21,8 @@ async def get_new_storage(message: types.Message, state: FSMContext):
 
 async def get_fio(message: types.Message, state: FSMContext):
     await state.update_data(fio=message.text)
-    await message.answer('Укажите адрес актуального склада (на который нужно поменять)',
-                         reply_markup=kb.sure())
+    await message.answer(
+        'Укажите адрес актуального склада (на который нужно поменять)')
     await state.set_state(UpdateStorage.address_storage)
 
 
@@ -31,13 +31,6 @@ async def get_address(message: types.Message, state: FSMContext):
     await message.answer('Вы уверены, что все данные верны?',
                          reply_markup=kb.sure())
     await state.set_state(UpdateStorage.sure)
-
-
-@dp.callback_query_handler(text='edit', state=UpdateStorage.sure)
-async def edit_data(query: types.CallbackQuery, state: FSMContext):
-    await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await query.message.answer('Выберите номер пункта для корректировки: ',
-                               reply_markup=kb.choose_number())
 
 
 def register(dp: Dispatcher):

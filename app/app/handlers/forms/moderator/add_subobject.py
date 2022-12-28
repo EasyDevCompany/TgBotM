@@ -40,7 +40,7 @@ message_id = ''
 
 
 @dp.callback_query_handler(state=AddObj.subsystems)
-async def get_subobject(query: types.CallbackQuery, state: FSMContext):
+async def get_subsystems(query: types.CallbackQuery, state: FSMContext):
     global raw_message
     global message_id
     new_kb = kb.accept().add(kb.exit_button)
@@ -54,7 +54,7 @@ async def get_subobject(query: types.CallbackQuery, state: FSMContext):
                                     query.message.chat.id,
                                     message_id, reply_markup=new_kb)
     else:
-        await state.update_data(subsystems=raw_message)
+        await state.update_data(subsystems=raw_message[11:])
         await bot.delete_message(
             query.message.chat.id, query.message.message_id)
         raw_message = 'Ваш выбор: '
@@ -62,13 +62,6 @@ async def get_subobject(query: types.CallbackQuery, state: FSMContext):
         await query.message.answer('Вы уверены, что все данные верны?',
                                    reply_markup=new_kb)
         await state.set_state(AddObj.sure)
-
-
-@dp.callback_query_handler(text='edit', state=AddObj.sure)
-async def edit_data(query: types.CallbackQuery, state: FSMContext):
-    await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await query.message.answer('Выберите номер пункта для корректировки: ',
-                               reply_markup=kb.choose_number())
 
 
 def register(dp: Dispatcher):

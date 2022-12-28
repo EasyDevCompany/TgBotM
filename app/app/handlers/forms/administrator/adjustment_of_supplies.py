@@ -76,8 +76,7 @@ async def get_description(message: types.Message, state: FSMContext):
 
 @dp.callback_query_handler()
 async def get_extra_files(message: types.Message,
-                          state: FSMContext,
-                          query: types.CallbackQuery):
+                          state: FSMContext):
     await state.update_data(extra_file=message.document.file_id)
     print(await state.get_data())
 
