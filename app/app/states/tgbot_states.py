@@ -71,3 +71,50 @@ class EditShpmnt(BaseStates):
     another_what_edit = State()
     description = State()
     extra_files = State()
+
+
+class ChangeStatus(BaseStates):
+    note = State()
+    number_bid = State()
+    status_in_bid = State()
+
+
+class AddCoef(BaseStates):
+    update_coef = State()
+    old_new = State()
+    ratio = State()
+
+
+class UpdateStorage(BaseStates):
+    number_bid = State()
+    new_storage = State()
+    fio = State()
+    address_storage = State()
+
+
+class AddNaming(BaseStates):
+    section_material = State()
+    subsection_material = State()
+    group_material = State()
+    name_material = State()
+    unit_of_measureament = State()
+    add_several_naming = State()
+
+
+class UpdateSubObject(BaseStates):
+    select_subobject = State()
+    select_type_work = State()
+
+
+class EditViewWork(BaseStates):
+    edit_sub_object_type_work = State()
+    edit_type_work = State()
+    edit_sort = State()
+    edit_sub_systems = State()
+
+
+class AddViewWork(BaseStates):
+    edit_sub_object = State()
+    edit_type_work = State()
+    edit_sort = State()
+    edit_sub_systems = State()
