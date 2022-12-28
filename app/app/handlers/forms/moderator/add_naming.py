@@ -33,6 +33,13 @@ async def skip(query: types. CallbackQuery, state: FSMContext,
         await state.finish()
 
 
+@dp.callback_query_handler(text='skip', state=AddNaming.add_several_naming)
+async def skip(query: types. CallbackQuery, state: FSMContext):
+    await bot.delete_message(query.message.chat.id, query.message.message_id)
+    print(await state.get_data())
+    await query.answer()
+
+
 async def get_section_material(message: types.Message, state: FSMContext):
     await state.update_data(field_one=message.text)
     await message.answer(SUB_PART,
