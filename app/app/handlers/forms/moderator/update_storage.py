@@ -201,6 +201,92 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
         await state.finish()
 
 
+@dp.callback_query_handler(state=UpdateStorage.sure)
+async def correct(query: types.CallbackQuery, state: FSMContext):
+    if query.data == '1':
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        await state.update_data(change='name')
+        await query.message.answer('Введите ФИО', reply_markup=kb.exit_kb())
+        await state.set_state(UpdateStorage.edit)
+    elif query.data == '2':
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        await state.update_data(change='role')
+        new_kb = kb.choose_your_role().add(kb.exit_button)
+        await query.message.answer('Выберите свою роль',
+                                   reply_markup=new_kb)
+        await state.set_state(UpdateStorage.edit)
+    elif query.data == '3':
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        await state.update_data(change='request_type')
+        new_kb = kb.main_kb().add(kb.exit_button)
+        await query.message.answer('Выберите тип запроса',
+                                   reply_markup=new_kb)
+        await state.set_state(BaseStates.request_type)
+    elif query.data == '4':
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        await state.update_data(change='number_bid')
+        await query.message.answer(
+            const.NUMBER_BID, reply_markup=kb.exit_kb())
+        await state.set_state(UpdateStorage.edit)
+    elif query.data == '5':
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        await state.update_data(change='new_storage')
+        await query.message.answer('Укажите новый склад доставки',
+                                   reply_markup=kb.exit_kb())
+        await state.set_state(UpdateStorage.edit)
+    elif query.data == '6':
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        await state.update_data(change='contact_fio')
+        await query.message.answer('Укажите контактное лицо (Ф.И.О.)',
+                                   reply_markup=kb.exit_kb())
+        await state.set_state(UpdateStorage.edit)
+    elif query.data == '7':
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        await state.update_data(change='address')
+        await query.message.answer(
+            'Укажите адрес актуального склада (на который нужно поменять)',
+            reply_markup=kb.exit_kb())
+        await state.set_state(UpdateStorage.edit)
+    await query.answer()
+
+
+async def edit(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    point = data['change']
+    if point == 'name':
+        await state.update_data(name=message.text)
+    elif point == 'number_bid':
+        await state.update_data(number_bid=message.text)
+    elif point == 'new_storage':
+        await state.update_data(new_storage=message.text)
+    elif point == 'contact_fio':
+        await state.update_data(contact_fio=message.text)
+    elif point == 'address':
+        await state.update_data(address=message.text)
+    print(await state.get_data())
+    new_kb = kb.sure().add(kb.exit_button)
+    await message.answer(const.SURE,
+                         reply_markup=new_kb)
+    await state.set_state(UpdateStorage.sure)
+
+
+@dp.callback_query_handler(state=UpdateStorage.edit)
+async def get_role(query: types.CallbackQuery, state: FSMContext):
+    await bot.delete_message(query.message.chat.id, query.message.message_id)
+    await state.update_data(role=query.data)
+    new_kb = kb.sure().add(kb.exit_button)
+    await query.message.answer(const.SURE,
+                               reply_markup=new_kb)
+    await state.set_state(UpdateStorage.sure)
+
+
 def register(dp: Dispatcher):
     dp.register_message_handler(get_number_bid, state=UpdateStorage.number_bid)
     dp.register_message_handler(get_new_storage,
