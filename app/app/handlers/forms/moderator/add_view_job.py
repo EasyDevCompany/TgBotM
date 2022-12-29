@@ -1,9 +1,10 @@
-from aiogram import types, Dispatcher
-from aiogram.dispatcher import FSMContext
 import keyboards.inline_keyboard as kb
-from loader import dp, bot
+from aiogram import Dispatcher, types
+from aiogram.dispatcher import FSMContext
+from loader import bot, dp
+from states.base import BaseStates
 from states.tgbot_states import AddViewWork
-import handlers.start as start
+from utils import const
 
 
 async def get_sub_object(message: types.Message, state: FSMContext):
@@ -23,8 +24,9 @@ async def get_type_work(message: types.Message, state: FSMContext):
 async def get_sort(message: types.Message, state: FSMContext):
     await state.update_data(sort=message.text)
     new_kb = kb.add_subsystem_kb().add(kb.exit_button)
-    await message.answer('Укажите подсистемы, в которых вид работ будет отображаться',
-                         reply_markup=new_kb)
+    await message.answer(
+        'Укажите подсистемы, в которых вид работ будет отображаться',
+        reply_markup=new_kb)
     await state.set_state(AddViewWork.subsystems)
 
 
@@ -52,15 +54,94 @@ async def get_subsystems(query: types.CallbackQuery, state: FSMContext):
             query.message.chat.id, query.message.message_id)
         raw_message = 'Ваш выбор: '
         new_kb = kb.sure().add(kb.exit_button)
-        await query.message.answer('Вы уверены, что все данные верны?',
+        await query.message.answer(const.SURE,
                                    reply_markup=new_kb)
         await state.set_state(AddViewWork.sure)
+    await query.answer()
 
 
 @dp.callback_query_handler(state=AddViewWork.sure)
 async def correct(query: types.CallbackQuery, state: FSMContext):
     if query.data == '1':
-        await start.create_ticket(query=query, state=state)
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        await state.update_data(change='name')
+        await query.message.answer('Введите ФИО', reply_markup=kb.exit_kb())
+        await state.set_state(AddViewWork.edit)
+    elif query.data == '2':
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        await state.update_data(change='role')
+        new_kb = kb.choose_your_role().add(kb.exit_button)
+        await query.message.answer('Выберите свою роль',
+                                   reply_markup=new_kb)
+        await state.set_state(AddViewWork.edit)
+    elif query.data == '3':
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        await state.update_data(change='request_type')
+        new_kb = kb.main_kb().add(kb.exit_button)
+        await query.message.answer('Выберите тип запроса',
+                                   reply_markup=new_kb)
+        await state.set_state(BaseStates.request_type)
+    elif query.data == '4':
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        await state.update_data(change='sub_object')
+        await query.message.answer(
+            const.SELECT_SUBOBJECT, reply_markup=kb.exit_kb())
+        await state.set_state(AddViewWork.edit)
+    elif query.data == '5':
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        await state.update_data(change='type_work')
+        await query.message.answer('Укажите наименование вида работ',
+                                   reply_markup=kb.exit_kb())
+        await state.set_state(AddViewWork.edit)
+    elif query.data == '6':
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        await state.update_data(change='sort')
+        await query.message.answer('Укажите сортировку',
+                                   reply_markup=kb.exit_kb())
+        await state.set_state(AddViewWork.edit)
+    elif query.data == '7':
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        new_kb = kb.add_subsystem_kb().add(kb.exit_button)
+        await query.message.answer(
+            'Укажите подсистемы, в которых вид работ будет отображаться',
+            reply_markup=new_kb)
+        await state.set_state(AddViewWork.subsystems)
+    await query.answer()
+
+
+async def edit(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    point = data['change']
+    if point == 'type_work':
+        await state.update_data(type_work=message.text)
+    elif point == 'name':
+        await state.update_data(name=message.text)
+    elif point == 'sub_object':
+        await state.update_data(sub_object=message.text)
+    elif point == 'sort':
+        await state.update_data(sort=message.text)
+    print(await state.get_data())
+    new_kb = kb.sure().add(kb.exit_button)
+    await message.answer(const.SURE,
+                         reply_markup=new_kb)
+    await state.set_state(AddViewWork.sure)
+
+
+@dp.callback_query_handler(state=AddViewWork.edit)
+async def get_role(query: types.CallbackQuery, state: FSMContext):
+    await bot.delete_message(query.message.chat.id, query.message.message_id)
+    await state.update_data(role=query.data)
+    new_kb = kb.sure().add(kb.exit_button)
+    await query.message.answer(const.SURE,
+                               reply_markup=new_kb)
+    await state.set_state(AddViewWork.sure)
 
 
 def register(dp: Dispatcher):
@@ -69,3 +150,4 @@ def register(dp: Dispatcher):
     dp.register_message_handler(get_sort, state=AddViewWork.sort)
     dp.register_message_handler(get_subsystems,
                                 state=AddViewWork.subsystems)
+    dp.register_message_handler(edit, state=AddViewWork.edit)

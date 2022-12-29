@@ -27,12 +27,16 @@ async def cancel(query: types. CallbackQuery, state: FSMContext):
 
 @dp.callback_query_handler(text='edit', state='*')
 async def edit_data(query: types.CallbackQuery, state: FSMContext):
+    print(await state.get_state())
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     data = await state.get_data()
+    if 'change' in data:
+        del data['change']
     print(len(data))
     print(data)
     await query.message.answer('Выберите номер пункта для корректировки: ',
                                reply_markup=kb.genmarkup(data=data))
+    await query.answer()
 
 
 @inject
@@ -86,8 +90,10 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
     await state.update_data(request_type=query.data)
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     if query.data == 'add_subobject':
-        await query.message.answer(const.ADD_SUBOBJECTS,
-                                   reply_markup=kb.add_subobjects_kb())
+        new_kb = kb.add_subobjects_kb().add(kb.exit_button)
+        await query.message.answer(const.ADD_SUBOBJECTS)
+        await query.message.answer(const.SET_CHAPTER,
+                                   reply_markup=new_kb)
         await state.set_state(my_states.AddObj.chapter)
     elif query.data == 'change_status':
         await query.message.answer(const.CHANGE_STATUS_APPLICATION)
@@ -95,15 +101,18 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
         await state.set_state(my_states.ChangeStatus.note)
     elif query.data == 'edit_type_work':
         await query.message.answer(const.EDIT_SUBOBJECT)
-        await query.message.answer(const.EDIT_SUBOBJECT_TYPE_WORK, reply_markup=kb.exit_kb())
+        await query.message.answer(const.EDIT_SUBOBJECT_TYPE_WORK,
+                                   reply_markup=kb.exit_kb())
         await state.set_state(my_states.EditViewWork.edit_sub_object_type_work)
     elif query.data == 'add_type_work':
         await query.message.answer(const.ADD_TYPE_WORK)
-        await query.message.answer(const.SELECT_SUBOBJECT, reply_markup=kb.exit_kb())
+        await query.message.answer(const.SELECT_SUBOBJECT,
+                                   reply_markup=kb.exit_kb())
         await state.set_state(my_states.AddViewWork.sub_object)
     elif query.data == 'add_coef':
         await query.message.answer(const.CONVERSION_FACTOR)
-        await query.message.answer(const.UPDATE_COEF, reply_markup=kb.exit_kb())
+        await query.message.answer(
+            const.UPDATE_COEF, reply_markup=kb.exit_kb())
         await state.set_state(my_states.AddCoef.update_coef)
     elif query.data == 'update_storage':
         await query.message.answer(const.UPDATE_STORAGE)
@@ -111,11 +120,13 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
         await state.set_state(my_states.UpdateStorage.number_bid)
     elif query.data == 'add_names':
         await query.message.answer(const.ADD_NAMING)
-        await query.message.answer(const.SECTION_MATERIAL, reply_markup=kb.exit_kb())
+        await query.message.answer(const.SECTION_MATERIAL,
+                                   reply_markup=kb.exit_kb())
         await state.set_state(my_states.AddNaming.section_material)
     elif query.data == 'edit_subobject':
         await query.message.answer(const.EDIT_SUBOBJECT)
-        await query.message.answer(const.SELECT_SUBOBJECT, reply_markup=kb.exit_kb())
+        await query.message.answer(const.SELECT_SUBOBJECT,
+                                   reply_markup=kb.exit_kb())
         await state.set_state(my_states.UpdateSubObject.select_subobject)
     elif query.data == 'add_materials':
         await query.message.answer(const.ADD_MATERIALS)

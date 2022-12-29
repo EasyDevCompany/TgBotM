@@ -1,8 +1,9 @@
-from aiogram import types, Dispatcher
-from aiogram.dispatcher import FSMContext
 import keyboards.inline_keyboard as kb
+from aiogram import Dispatcher, types
+from aiogram.dispatcher import FSMContext
+from loader import bot, dp
+from states.base import BaseStates
 from states.tgbot_states import AddObjAdm
-from loader import dp, bot
 from utils import const
 
 
@@ -25,32 +26,123 @@ async def get_title(message: types.Message, state: FSMContext):
     new_kb = kb.storage_kb().add(kb.exit_button)
     await message.answer('Укажите склад объекта:',
                          reply_markup=new_kb)
-    await state.set_state(AddObjAdm.storage)
+    await state.set_state(AddObjAdm.new_or_exist)
 
 
-@dp.callback_query_handler(state=AddObjAdm.storage)
-async def get_storage(query: types.CallbackQuery, state: FSMContext):
+@dp.callback_query_handler(state=AddObjAdm.new_or_exist)
+async def get_new_or_exist(query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     if query.data == 'exist_storage':
+        await state.update_data(new_or_exist='exist')
         await query.message.answer('Укажите склад: ',
                                    reply_markup=kb.exit_kb())
-        await state.set_state(AddObjAdm.exist_storage)
+        await state.set_state(AddObjAdm.storage)
     elif query.data == 'new_storage':
+        await state.update_data(new_or_exist='new')
         await query.message.answer('Укажите название нового склада, '
                                    'Ф.И.О ответственного лица и титул',
                                    reply_markup=kb.exit_kb())
-        await state.set_state(AddObjAdm.if_new)
+        await state.set_state(AddObjAdm.storage)
 
 
-async def exist_storage(message: types.Message, state: FSMContext):
+async def get_storage(message: types.Message, state: FSMContext):
     await state.update_data(storage=message.text)
-    print(await state.get_data())
+    await message.answer('Вы уверены, что все данные верны?',
+                         reply_markup=kb.sure())
+    await state.set_state(AddObjAdm.sure)
 
 
-async def if_new(message: types.Message, state: FSMContext):
-    await state.update_data(storage=message.text)
+@dp.callback_query_handler(state=AddObjAdm.sure)
+async def correct(query: types.CallbackQuery, state: FSMContext):
+    if query.data == '1':
+        await state.update_data(change='name')
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        await query.message.answer('Введите ФИО', reply_markup=kb.exit_kb())
+        await state.set_state(AddObjAdm.edit)
+    elif query.data == '2':
+        await state.update_data(change='role')
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        new_kb = kb.choose_your_role().add(kb.exit_button)
+        await query.message.answer('Выберите свою роль',
+                                   reply_markup=new_kb)
+        await state.set_state(AddObjAdm.edit)
+    elif query.data == '3':
+        await state.update_data(change='request_type')
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        new_kb = kb.main_kb().add(kb.exit_button)
+        await query.message.answer('Выберите тип запроса',
+                                   reply_markup=new_kb)
+        await state.set_state(BaseStates.request_type)
+    elif query.data == '4':
+        await state.update_data(change='note')
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
+        await state.set_state(AddObjAdm.edit)
+    elif query.data == '5':
+        await state.update_data(change='obj_name')
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        await query.message.answer(
+            'Укажите название объекта, который необходимо добавить: ',
+            reply_markup=kb.exit_kb())
+        await state.set_state(AddObjAdm.edit)
+    elif query.data == '6':
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        await state.update_data(change='title')
+        await query.message.answer(
+            'Укажите титул объекта: ', reply_markup=kb.exit_kb())
+        await state.set_state(AddObjAdm.edit)
+    elif query.data == '7':
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        new_kb = kb.storage_kb().add(kb.exit_button)
+        await query.message.answer('Укажите склад объекта:',
+                                   reply_markup=new_kb)
+        await state.set_state(AddObjAdm.new_or_exist)
+    elif query.data == '8':
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        await state.update_data(change='storage')
+        await query.message.answer('Укажите название нового склада, '
+                                   'Ф.И.О ответственного лица и титул',
+                                   reply_markup=kb.exit_kb())
+        await state.set_state(AddObjAdm.edit)
+    await query.answer()
+
+
+async def edit(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    point = data['change']
+    if point == 'name':
+        await state.update_data(name=message.text)
+    elif point == 'note':
+        await state.update_data(note=message.document.file_id)
+    elif point == 'obj_name':
+        await state.update_data(obj_name=message.text)
+    elif point == 'title':
+        await state.update_data(title=message.text)
+    elif point == 'storage':
+        await state.update_data(storage=message.text)
     print(await state.get_data())
-    await message.answer(const.START_MESSAGE, reply_markup=kb.start_work)
+    new_kb = kb.sure().add(kb.exit_button)
+    await message.answer(const.SURE,
+                         reply_markup=new_kb)
+    await state.set_state(AddObjAdm.sure)
+
+
+@dp.callback_query_handler(state=AddObjAdm.edit)
+async def get_role(query: types.CallbackQuery, state: FSMContext):
+    await bot.delete_message(query.message.chat.id, query.message.message_id)
+    await state.update_data(role=query.data)
+    new_kb = kb.sure().add(kb.exit_button)
+    await query.message.answer(const.SURE,
+                               reply_markup=new_kb)
+    await state.set_state(AddObjAdm.sure)
 
 
 def register(dp: Dispatcher):
@@ -58,5 +150,7 @@ def register(dp: Dispatcher):
         get_note, state=AddObjAdm.note, content_types=['document'])
     dp.register_message_handler(get_obj_name, state=AddObjAdm.obj_name)
     dp.register_message_handler(get_title, state=AddObjAdm.title)
-    dp.register_message_handler(exist_storage, state=AddObjAdm.exist_storage)
-    dp.register_message_handler(if_new, state=AddObjAdm.if_new)
+    dp.register_message_handler(get_storage, state=AddObjAdm.storage)
+    dp.register_message_handler(edit,
+                                state=AddObjAdm.edit,
+                                content_types=['text', 'document'])

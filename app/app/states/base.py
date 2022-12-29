@@ -5,4 +5,4 @@ class BaseStates(StatesGroup):
     fio = State()
     role = State()
     request_type = State()
-    sure = State()
+

@@ -11,6 +11,8 @@ class EditMove(BaseStates):
     status = State()
     reason = State()
     description = State()
+    sure = State()
+    edit = State()
 
 
 class AddObj(BaseStates):
@@ -21,6 +23,9 @@ class AddObj(BaseStates):
     sort = State()
     choise = State()
     subsystems = State()
+    sure = State()
+    edit = State()
+    edit_chapter = State()
 
 
 class AddMat(BaseStates):
@@ -29,6 +34,8 @@ class AddMat(BaseStates):
     excel = State()
     myc = State()
     obj = State()
+    sure = State()
+    edit = State()
 
 
 class AddObjAdm(BaseStates):
@@ -36,8 +43,10 @@ class AddObjAdm(BaseStates):
     obj_name = State()
     title = State()
     storage = State()
-    exist_storage = State()
-    if_new = State()
+    new_or_exist = State()
+    new_or_exist_edit = State()
+    sure = State()
+    edit = State()
 
 
 class OpenAcs(BaseStates):
@@ -46,8 +55,11 @@ class OpenAcs(BaseStates):
     what_acs = State()
     staff_role = State()
     another_role = State()
+    staff_role_edit = State()
     for_what = State()
     obj_name = State()
+    sure = State()
+    edit = State()
 
 
 class EditMoveAdm(BaseStates):
@@ -57,9 +69,13 @@ class EditMoveAdm(BaseStates):
     storage_out = State()
     storage_in = State()
     status = State()
+    status_edit = State()
     reason = State()
+    reason_edit = State()
     another_reason = State()
     description = State()
+    sure = State()
+    edit = State()
 
 
 class EditShpmnt(BaseStates):
@@ -68,28 +84,37 @@ class EditShpmnt(BaseStates):
     number_invoice = State()
     storage = State()
     what_edit = State()
+    what_edit_correct = State()
     another_what_edit = State()
     description = State()
     extra_files = State()
+    sure = State()
+    edit = State()
 
 
 class ChangeStatus(BaseStates):
     note = State()
     number_bid = State()
     status_in_bid = State()
+    sure = State()
+    edit = State()
 
 
 class AddCoef(BaseStates):
     update_coef = State()
     old_new = State()
     ratio = State()
+    sure = State()
+    edit = State()
 
 
 class UpdateStorage(BaseStates):
     number_bid = State()
     new_storage = State()
-    fio = State()
+    contact_fio = State()
     address_storage = State()
+    sure = State()
+    edit = State()
 
 
 class AddNaming(BaseStates):
@@ -99,11 +124,15 @@ class AddNaming(BaseStates):
     name_material = State()
     unit_of_measureament = State()
     add_several_naming = State()
+    sure = State()
+    edit = State()
 
 
 class UpdateSubObject(BaseStates):
     select_subobject = State()
     select_type_work = State()
+    sure = State()
+    edit = State()
 
 
 class EditViewWork(BaseStates):
@@ -111,6 +140,8 @@ class EditViewWork(BaseStates):
     edit_type_work = State()
     edit_sort = State()
     edit_sub_systems = State()
+    sure = State()
+    edit = State()
 
 
 class AddViewWork(BaseStates):
@@ -118,3 +149,5 @@ class AddViewWork(BaseStates):
     type_work = State()
     sort = State()
     subsystems = State()
+    sure = State()
+    edit = State()
