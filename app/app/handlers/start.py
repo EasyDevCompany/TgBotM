@@ -113,8 +113,7 @@ async def edit_data(query: types.CallbackQuery, state: FSMContext):
 @inject
 async def start(
         message: types.Message,
-        tg_user_service: TelegramUserService = Provide[
-            Container.telegram_user_service]
+        tg_user_service: TelegramUserService = Provide[Container.telegram_user_service]
 ):
     await tg_user_service.get_or_create(
         obj_in={
