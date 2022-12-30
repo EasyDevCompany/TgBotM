@@ -1,7 +1,7 @@
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy import create_engine
 from contextvars import ContextVar
-from db.base import Base
+from app.db.base import Base
 
 scope: ContextVar = ContextVar('db_session_scope')
 

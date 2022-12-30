@@ -37,5 +37,4 @@ if __name__ == "__main__":
     db = container.db()
     db.create_database()
     container.wire(modules=[start])
-    executor.start_polling(
-        dp, skip_updates=True, on_startup=on_startup(dispatcher=dp))
+    executor.start_polling(dp, skip_updates=True, on_startup=on_startup(dispatcher=dp))
