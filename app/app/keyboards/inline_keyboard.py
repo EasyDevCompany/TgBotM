@@ -66,24 +66,23 @@ def create_ticket():
 
 def main_kb():
     keyboard = InlineKeyboardMarkup(resize_keyboard=True)
-    b1 = InlineKeyboardButton(text='Смена статуса заявки',
+    b1 = InlineKeyboardButton(text='Корректировка оформленной накладной',
+                              callback_data='adjustment_invoice')
+    b2 = InlineKeyboardButton(text='Смена статуса заявки',
                               callback_data='change_status')
-    b2 = InlineKeyboardButton(
+    b3 = InlineKeyboardButton(
         text='Добавление коэффициента пересчёта по наименованию',
         callback_data='add_coef')
-    b3 = InlineKeyboardButton(
-        text='Корректировка склада в заявке', callback_data='update_storage')
     b4 = InlineKeyboardButton(
-        text='Добавление наименований', callback_data='add_names')
+        text='Корректировка склада в заявке', callback_data='update_storage')
     b5 = InlineKeyboardButton(
-        text='Редактирование видов работ', callback_data='edit_type_work')
+        text='Добавление наименований', callback_data='add_names')
     b6 = InlineKeyboardButton(
-        text='Добавление видов работ', callback_data='add_type_work')
+        text='Редактирование видов работ', callback_data='edit_type_work')
     b7 = InlineKeyboardButton(
-        text='Редактирование подобъектов', callback_data='edit_subobject')
+        text='Добавление видов работ', callback_data='add_type_work')
     b8 = InlineKeyboardButton(
-        text='Редактирование некорректного перемещения',
-        callback_data='edit_incorrect_move')
+        text='Редактирование подобъектов', callback_data='edit_subobject')
     b9 = InlineKeyboardButton(
         text='Добавление подобъектов', callback_data='add_subobject')
     b10 = InlineKeyboardButton(
@@ -356,4 +355,18 @@ def what_edit():
     keyboard.row(b7)
     keyboard.row(b8)
     keyboard.row(b9)
+    return keyboard
+
+
+def adj_inv():
+    keyboard = InlineKeyboardMarkup(resize_keyboard=True)
+    b1 = InlineKeyboardButton(text='Наименование',
+                              callback_data='invoice_name')
+    b2 = InlineKeyboardButton(text='Единицу измерения',
+                              callback_data='measurement_unit')
+    b3 = InlineKeyboardButton(text='Количество материалов',
+                              callback_data='quantity_material')
+    keyboard.row(b1)
+    keyboard.row(b2)
+    keyboard.row(b3)
     return keyboard

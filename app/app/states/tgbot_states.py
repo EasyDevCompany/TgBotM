@@ -2,14 +2,12 @@ from aiogram.dispatcher.filters.state import State
 from .base import BaseStates
 
 
-class EditMove(BaseStates):
+class AdjInv(BaseStates):
     note = State()
-    number_ticket = State()
     number_invoice = State()
-    storage_out = State()
-    storage_in = State()
-    status = State()
-    reason = State()
+    number_ticket = State()
+    what_edit = State()
+    what_edit_correct = State()
     description = State()
     sure = State()
     edit = State()

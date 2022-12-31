@@ -1,16 +1,16 @@
 from dependency_injector.wiring import inject, Provide
 
-from core.container import Container
+from app.core.container import Container
 
-from models.telegram_user import TelegramUser
-from services.tg_user_service import TelegramUserService
+from app.models.telegram_user import TelegramUser
+from app.services.tg_user_service import TelegramUserService
 
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import CommandStart
 
-from utils import const
-import keyboards.inline_keyboard as kb
+from app.utils import const
+import app.keyboards.inline_keyboard as kb
 from loader import dp, bot
 from loguru import logger
 from states.base import BaseStates
@@ -147,8 +147,10 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
         await query.message.answer(const.EDIT_SHIP)
         await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
         await state.set_state(my_states.EditShpmnt.note)
-    elif query.data == 'edit_incorrect_move':
-        await state.set_state(my_states.EditMove.note)
+    elif query.data == 'adjustment_invoice':
+        await query.message.answer(const.ADJ_INVOICE)
+        await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
+        await state.set_state(my_states.AdjInv.note)
 
 
 def register_start_handler(dp: Dispatcher):

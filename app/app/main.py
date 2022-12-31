@@ -3,12 +3,12 @@ from aiogram import Dispatcher
 
 from loader import dp
 
-from core.container import Container
-import middlewares
+from app.core.container import Container
+from app import middlewares
 
-from handlers import start
-import handlers.forms.moderator as moderator
-import handlers.forms.administrator as administrator
+from app.handlers import start
+import app.handlers.forms.moderator as moderator
+import app.handlers.forms.administrator as administrator
 
 
 start.register_start_handler(dp=dp)
@@ -20,7 +20,7 @@ moderator.change_status_application.register(dp=dp)
 moderator.conversion_factor.register(dp=dp)
 moderator.edit_subobject.register(dp=dp)
 moderator.edit_view_job.register(dp=dp)
-# moderator.editing_some_movement.register(dp=dp)
+moderator.adjustment_invoice.register(dp=dp)
 moderator.update_storage.register(dp=dp)
 administrator.add_edo.register(dp=dp)
 administrator.open_edo.register(dp=dp)

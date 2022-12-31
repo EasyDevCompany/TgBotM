@@ -1,4 +1,4 @@
-from repository.telegarm_user import RepositoryTelegramUser
+from app.repository.telegarm_user import RepositoryTelegramUser
 from typing import Any
 
 
