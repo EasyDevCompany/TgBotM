@@ -7,8 +7,25 @@ from app.core.container import Container
 from app import middlewares
 
 from app.handlers import start
+import handlers.forms.moderator as moderator
+import handlers.forms.administrator as administrator
+
 
 start.register_start_handler(dp=dp)
+moderator.add_subobject.register(dp=dp)
+moderator.add_material.register(dp=dp)
+moderator.add_naming.register(dp=dp)
+moderator.add_view_job.register(dp=dp)
+moderator.change_status_application.register(dp=dp)
+moderator.conversion_factor.register(dp=dp)
+moderator.edit_subobject.register(dp=dp)
+moderator.edit_view_job.register(dp=dp)
+moderator.adjustment_invoice.register(dp=dp)
+moderator.update_storage.register(dp=dp)
+administrator.add_edo.register(dp=dp)
+administrator.open_edo.register(dp=dp)
+administrator.edit_some_moving.register(dp=dp)
+administrator.adjustment_of_supplies.register(dp=dp)
 
 
 def on_startup(dispatcher: Dispatcher):
