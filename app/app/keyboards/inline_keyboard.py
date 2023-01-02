@@ -50,7 +50,7 @@ skip_button = InlineKeyboardButton(text='Пропустить', callback_data='s
 def genmarkup(data):
     keyboard = InlineKeyboardMarkup()
     keyboard.row_width = 1
-    for i in range(1, len(data) + 1):
+    for i in range(1, len(data)):
         keyboard.add(InlineKeyboardButton(i, callback_data=i))
     return keyboard
 

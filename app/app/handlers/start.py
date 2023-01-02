@@ -98,16 +98,30 @@ async def cancel(query: types. CallbackQuery, state: FSMContext):
 
 @dp.callback_query_handler(text='edit', state='*')
 async def edit_data(query: types.CallbackQuery, state: FSMContext):
-    print(await state.get_state())
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     data = await state.get_data()
     if 'change' in data:
         del data['change']
-    print(len(data))
-    print(data)
     await query.message.answer('Выберите номер пункта для корректировки: ',
                                reply_markup=kb.genmarkup(data=data))
     await query.answer()
+
+
+@dp.callback_query_handler(text='send', state='*')
+async def send_ticket(query: types.CallbackQuery, state: FSMContext):
+    await bot.delete_message(query.message.chat.id, query.message.message_id)
+    data = await state.get_data()
+    if data['adm_or_tech'] == 'adm':
+        chat = settings.ADMIN_CHAT_ID
+    elif data['adm_or_tech'] == 'tech':
+        chat = settings.TECH_CHAT_ID
+    del data['adm_or_tech']
+    message = ''
+    for k, v in data.items():
+        message += f'{k}: {v}\n'
+    await bot.send_message(chat, message, reply_markup=kb.adm_kb())
+    await state.finish()
+    await query.message.answer(const.START_MESSAGE, reply_markup=kb.start_work)
 
 
 @inject
