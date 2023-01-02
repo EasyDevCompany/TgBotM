@@ -15,6 +15,7 @@ from loader import dp, bot
 from loguru import logger
 from states.base import BaseStates
 import states.tgbot_states as my_states
+from app.core.config import settings
 
 
 @dp.callback_query_handler(text='exit', state='*')
@@ -27,16 +28,30 @@ async def cancel(query: types. CallbackQuery, state: FSMContext):
 
 @dp.callback_query_handler(text='edit', state='*')
 async def edit_data(query: types.CallbackQuery, state: FSMContext):
-    print(await state.get_state())
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     data = await state.get_data()
     if 'change' in data:
         del data['change']
-    print(len(data))
-    print(data)
     await query.message.answer('Выберите номер пункта для корректировки: ',
                                reply_markup=kb.genmarkup(data=data))
     await query.answer()
+
+
+@dp.callback_query_handler(text='send', state='*')
+async def send_ticket(query: types.CallbackQuery, state: FSMContext):
+    await bot.delete_message(query.message.chat.id, query.message.message_id)
+    data = await state.get_data()
+    if data['adm_or_tech'] == 'adm':
+        chat = settings.ADMIN_CHAT_ID
+    elif data['adm_or_tech'] == 'tech':
+        chat = settings.TECH_CHAT_ID
+    del data['adm_or_tech']
+    message = ''
+    for k, v in data.items():
+        message += f'{k}: {v}\n'
+    await bot.send_message(chat, message, reply_markup=kb.adm_kb())
+    await state.finish()
+    await query.message.answer(const.START_MESSAGE, reply_markup=kb.start_work)
 
 
 @inject
@@ -89,65 +104,79 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
     await state.update_data(request_type=query.data)
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     if query.data == 'add_subobject':
+        await state.update_data(adm_or_tech='tech')
         new_kb = kb.add_subobjects_kb().add(kb.exit_button)
         await query.message.answer(const.ADD_SUBOBJECTS)
         await query.message.answer(const.SET_CHAPTER,
                                    reply_markup=new_kb)
         await state.set_state(my_states.AddObj.chapter)
     elif query.data == 'change_status':
+        await state.update_data(adm_or_tech='tech')
         await query.message.answer(const.CHANGE_STATUS_APPLICATION)
         await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
         await state.set_state(my_states.ChangeStatus.note)
     elif query.data == 'edit_type_work':
+        await state.update_data(adm_or_tech='tech')
         await query.message.answer(const.EDIT_SUBOBJECT)
         await query.message.answer(const.EDIT_SUBOBJECT_TYPE_WORK,
                                    reply_markup=kb.exit_kb())
         await state.set_state(my_states.EditViewWork.edit_sub_object_type_work)
     elif query.data == 'add_type_work':
+        await state.update_data(adm_or_tech='tech')
         await query.message.answer(const.ADD_TYPE_WORK)
         await query.message.answer(const.SELECT_SUBOBJECT,
                                    reply_markup=kb.exit_kb())
         await state.set_state(my_states.AddViewWork.sub_object)
     elif query.data == 'add_coef':
+        await state.update_data(adm_or_tech='tech')
         await query.message.answer(const.CONVERSION_FACTOR)
         await query.message.answer(
             const.UPDATE_COEF, reply_markup=kb.exit_kb())
         await state.set_state(my_states.AddCoef.update_coef)
     elif query.data == 'update_storage':
+        await state.update_data(adm_or_tech='tech')
         await query.message.answer(const.UPDATE_STORAGE)
         await query.message.answer(const.NUMBER_BID, reply_markup=kb.exit_kb())
         await state.set_state(my_states.UpdateStorage.number_bid)
     elif query.data == 'add_names':
+        await state.update_data(adm_or_tech='tech')
         await query.message.answer(const.ADD_NAMING)
         await query.message.answer(const.SECTION_MATERIAL,
                                    reply_markup=kb.exit_kb())
         await state.set_state(my_states.AddNaming.section_material)
     elif query.data == 'edit_subobject':
+        await state.update_data(adm_or_tech='tech')
         await query.message.answer(const.EDIT_SUBOBJECT)
         await query.message.answer(const.SELECT_SUBOBJECT,
                                    reply_markup=kb.exit_kb())
         await state.set_state(my_states.UpdateSubObject.select_subobject)
     elif query.data == 'add_materials':
+        await state.update_data(adm_or_tech='tech')
         await query.message.answer(const.ADD_MATERIALS)
         await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
         await state.set_state(my_states.AddMat.note)
     elif query.data == 'add_EDO':
+        await state.update_data(adm_or_tech='adm')
         await query.message.answer(const.ADD_EDO)
         await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
         await state.set_state(my_states.AddObjAdm.note)
     elif query.data == 'open_access':
+        await state.update_data(adm_or_tech='adm')
         await query.message.answer(const.OPEN_EDO)
         await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
         await state.set_state(my_states.OpenAcs.note)
     elif query.data == 'edit_incorrect_move_admin':
+        await state.update_data(adm_or_tech='adm')
         await query.message.answer(const.EDIT_MOV)
         await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
         await state.set_state(my_states.EditMoveAdm.note)
     elif query.data == 'edit_shipment':
+        await state.update_data(adm_or_tech='adm')
         await query.message.answer(const.EDIT_SHIP)
         await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
         await state.set_state(my_states.EditShpmnt.note)
     elif query.data == 'adjustment_invoice':
+        await state.update_data(adm_or_tech='tech')
         await query.message.answer(const.ADJ_INVOICE)
         await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
         await state.set_state(my_states.AdjInv.note)

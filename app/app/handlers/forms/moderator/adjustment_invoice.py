@@ -24,8 +24,9 @@ async def get_number_invoice(message: types.Message, state: FSMContext):
 async def get_number_ticket(message: types.Message, state: FSMContext):
     await state.update_data(number_ticket=message.text)
     new_kb = kb.adj_inv().add(kb.exit_button)
-    await message.answer('Выберите, что необходимо отредактировать в накладной',
-                         reply_markup=new_kb)
+    await message.answer(
+        'Выберите, что необходимо отредактировать в накладной',
+        reply_markup=new_kb)
     await state.set_state(AdjInv.what_edit)
 
 

@@ -17,7 +17,7 @@ skip_button = InlineKeyboardButton(text='Пропустить', callback_data='s
 def genmarkup(data):
     keyboard = InlineKeyboardMarkup()
     keyboard.row_width = 1
-    for i in range(1, len(data) + 1):
+    for i in range(1, len(data)):
         keyboard.add(InlineKeyboardButton(i, callback_data=i))
     return keyboard
 
@@ -369,4 +369,18 @@ def adj_inv():
     keyboard.row(b1)
     keyboard.row(b2)
     keyboard.row(b3)
+    return keyboard
+
+
+def adm_kb():
+    keyboard = InlineKeyboardMarkup(resize_keyboard=True)
+    b1 = InlineKeyboardButton(
+        text='Взять в работу', callback_data='get'
+    )
+    b2 = InlineKeyboardButton(
+        text='Вернуть сотруднику для корректировки запроса',
+        callback_data='comeback'
+    )
+    keyboard.row(b1)
+    keyboard.row(b2)
     return keyboard
