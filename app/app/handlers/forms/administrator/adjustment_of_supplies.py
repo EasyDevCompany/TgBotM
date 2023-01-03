@@ -4,13 +4,13 @@ from aiogram.dispatcher import FSMContext
 from loader import bot, dp
 from states.base import BaseStates
 from states.tgbot_states import EditShpmnt
-from utils import const
+from utils import const, get_data
 from utils import const_edit_shpmnt as text
 
 
 @dp.callback_query_handler(text='skip', state=EditShpmnt.extra_files)
 async def skip(query: types. CallbackQuery, state: FSMContext):
-    await state.update_data(extra_file=None)
+    await state.update_data(extra_file=['Дополнительные файлы', None])
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     new_kb = kb.sure().add(kb.exit_button)
     await query.message.answer(const.SURE, reply_markup=new_kb)
@@ -18,20 +18,22 @@ async def skip(query: types. CallbackQuery, state: FSMContext):
 
 
 async def get_note(message: types.Message, state: FSMContext):
-    await state.update_data(note=message.document.file_id)
+    await state.update_data(note=['Файл служебной записки',
+                                  message.document.file_id])
     await message.answer(
         'Укажите номер заявки: ', reply_markup=kb.exit_kb())
     await state.set_state(EditShpmnt.number_ticket)
 
 
 async def get_ticket(message: types.Message, state: FSMContext):
-    await state.update_data(number_ticket=message.text)
+    await state.update_data(number_ticket=['Номер заявки',
+                                           message.text])
     await message.answer(text.NUM_INVOICE, reply_markup=kb.exit_kb())
     await state.set_state(EditShpmnt.number_invoice)
 
 
 async def get_invoice(message: types.Message, state: FSMContext):
-    await state.update_data(number_invoice=message.text)
+    await state.update_data(number_invoice=['Номер накладной', message.text])
     await message.answer(
         'Укажите входящий склад(на который приняли поставку): ',
         reply_markup=kb.exit_kb())
@@ -39,7 +41,7 @@ async def get_invoice(message: types.Message, state: FSMContext):
 
 
 async def get_storage(message: types.Message, state: FSMContext):
-    await state.update_data(storage=message.text)
+    await state.update_data(storage=['Склад', message.text])
     new_kb = kb.what_edit().add(kb.exit_button)
     await message.answer('Что необходимо отредактировать в поставке:',
                          reply_markup=new_kb)
@@ -49,7 +51,7 @@ async def get_storage(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(state=EditShpmnt.what_edit)
 async def get_changes(query: types.CallbackQuery, state: FSMContext, ):
     if query.data != 'Другое':
-        await state.update_data(what_edit=query.data)
+        await state.update_data(what_edit=[const.WHAT_EDIT, query.data])
         await bot.delete_message(
             query.message.chat.id, query.message.message_id)
         await query.message.answer(const.DESCRIPTION_ERROR,
@@ -66,28 +68,35 @@ async def get_changes(query: types.CallbackQuery, state: FSMContext, ):
 async def get_another_changes(message: types.Message, state: FSMContext):
     data = await state.get_data()
     if 'extra_file' not in data:
-        await state.update_data(what_edit=message.text)
+        await state.update_data(what_edit=[const.WHAT_EDIT, message.text])
         await message.answer(const.DESCRIPTION_ERROR,
                              reply_markup=kb.exit_kb())
         await state.set_state(EditShpmnt.description)
     else:
-        await state.update_data(what_edit=message.text)
+        await state.update_data(what_edit=[const.WHAT_EDIT, message.text])
+        await get_data.send_data(message=message, state=state)
         new_kb = kb.sure().add(kb.exit_button)
         await message.answer(const.SURE, reply_markup=new_kb)
         await state.set_state(EditShpmnt.sure)
 
 
 async def get_description(message: types.Message, state: FSMContext):
-    await state.update_data(description=message.text)
+    await state.update_data(description=['Описание ошибки', message.text])
     new_kb = kb.exit_kb().add(kb.skip_button)
     await message.answer(text.EXTRA_FILE, reply_markup=new_kb)
     await state.set_state(EditShpmnt.extra_files)
 
 
-@dp.callback_query_handler()
+# @dp.callback_query_handler(state=EditShpmnt.extra_files)
 async def get_extra_files(message: types.Message,
                           state: FSMContext):
-    await state.update_data(extra_file=message.document.file_id)
+    try:
+        await state.update_data(extra_file=['Дополнительные файлы',
+                                            message.media_group_id])
+    except:
+        await state.update_data(extra_file=['Дополнительные файлы',
+                                            message.document.file_id])
+    await get_data.send_data(message=message, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await message.answer(const.SURE, reply_markup=new_kb)
     await state.set_state(EditShpmnt.sure)
@@ -174,18 +183,21 @@ async def edit(message: types.Message, state: FSMContext):
     data = await state.get_data()
     point = data['change']
     if point == 'name':
-        await state.update_data(name=message.text)
+        await state.update_data(name=['ФИО', message.text])
     elif point == 'note':
-        await state.update_data(note=message.document.file_id)
+        await state.update_data(note=['Файл служебной записки',
+                                      message.document.file_id])
     elif point == 'number_ticket':
-        await state.update_data(number_ticket=message.text)
+        await state.update_data(number_ticket=['Номер заявки',
+                                               message.text])
     elif point == 'number_invoice':
-        await state.update_data(number_invoice=message.text)
+        await state.update_data(number_invoice=['Номер накладной',
+                                                message.text])
     elif point == 'storage':
-        await state.update_data(storage=message.text)
+        await state.update_data(storage=['Склад', message.text])
     elif point == 'description':
-        await state.update_data(description=message.text)
-    print(await state.get_data())
+        await state.update_data(description=['Описание ошибки', message.text])
+    await get_data.send_data(message=message, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await message.answer(const.SURE, reply_markup=new_kb)
     await state.set_state(EditShpmnt.sure)
@@ -194,7 +206,8 @@ async def edit(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(state=EditShpmnt.edit)
 async def get_role(query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await state.update_data(role=query.data)
+    await state.update_data(role=['Роль', query.data])
+    await get_data.send_data(query=query, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await query.message.answer(const.SURE, reply_markup=new_kb)
     await state.set_state(EditShpmnt.sure)
@@ -203,9 +216,10 @@ async def get_role(query: types.CallbackQuery, state: FSMContext):
 @dp.callback_query_handler(state=EditShpmnt.what_edit_correct)
 async def get_changes_edit(query: types.CallbackQuery, state: FSMContext, ):
     if query.data != 'Другое':
-        await state.update_data(what_edit=query.data)
+        await state.update_data(what_edit=[const.WHAT_EDIT, query.data])
         await bot.delete_message(query.message.chat.id,
                                  query.message.message_id)
+        await get_data.send_data(query=query, state=state)
         new_kb = kb.sure().add(kb.exit_button)
         await query.message.answer(const.SURE, reply_markup=new_kb)
         await state.set_state(EditShpmnt.sure)

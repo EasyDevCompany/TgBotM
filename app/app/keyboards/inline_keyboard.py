@@ -361,11 +361,11 @@ def what_edit():
 def adj_inv():
     keyboard = InlineKeyboardMarkup(resize_keyboard=True)
     b1 = InlineKeyboardButton(text='Наименование',
-                              callback_data='invoice_name')
+                              callback_data='Наименование')
     b2 = InlineKeyboardButton(text='Единицу измерения',
-                              callback_data='measurement_unit')
+                              callback_data='Единицу измерения')
     b3 = InlineKeyboardButton(text='Количество материалов',
-                              callback_data='quantity_material')
+                              callback_data='Количество материалов')
     keyboard.row(b1)
     keyboard.row(b2)
     keyboard.row(b3)

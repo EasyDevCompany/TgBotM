@@ -4,25 +4,27 @@ from aiogram.dispatcher import FSMContext
 from loader import bot, dp
 from states.base import BaseStates
 from states.tgbot_states import ChangeStatus
-from utils import const
+from utils import const, get_data
 
 
 async def get_note(message: types.Message, state: FSMContext):
-    await state.update_data(note=message.document.file_id)
+    await state.update_data(note=['Файл служебной записки',
+                                  message.document.file_id])
     await message.answer('Укажите номер заявки',
                          reply_markup=kb.exit_kb())
     await state.set_state(ChangeStatus.number_bid)
 
 
 async def get_number_bid(message: types.Message, state: FSMContext):
-    await state.update_data(number=message.text)
+    await state.update_data(number=['Номер заявки', message.text])
     await message.answer('Укажите какой статус необходимо поставить заявке',
                          reply_markup=kb.exit_kb())
     await state.set_state(ChangeStatus.status_in_bid)
 
 
 async def get_status_in_bid(message: types.Message, state: FSMContext):
-    await state.update_data(status=message.text)
+    await state.update_data(status=['Статус заявки', message.text])
+    await get_data.send_data(message=message, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await message.answer(const.SURE,
                          reply_markup=new_kb)
@@ -82,14 +84,15 @@ async def edit(message: types.Message, state: FSMContext):
     data = await state.get_data()
     point = data['change']
     if point == 'name':
-        await state.update_data(name=message.text)
+        await state.update_data(name=['ФИО', message.text])
     elif point == 'note':
-        await state.update_data(note=message.document.file_id)
+        await state.update_data(note=['Файл служебной записки',
+                                      message.document.file_id])
     elif point == 'number':
-        await state.update_data(number=message.text)
+        await state.update_data(number=['Номер заявки', message.text])
     elif point == 'status':
-        await state.update_data(status=message.text)
-    print(await state.get_data())
+        await state.update_data(status=['Статус заявки', message.text])
+    await get_data.send_data(message=message, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await message.answer(const.SURE,
                          reply_markup=new_kb)
@@ -99,7 +102,8 @@ async def edit(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(state=ChangeStatus.edit)
 async def get_role(query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await state.update_data(role=query.data)
+    await state.update_data(role=['Роль', query.data])
+    await get_data.send_data(query=query, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await query.message.answer(const.SURE,
                                reply_markup=new_kb)

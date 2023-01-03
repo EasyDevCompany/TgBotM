@@ -4,32 +4,33 @@ from aiogram.dispatcher import FSMContext
 from loader import bot, dp
 from states.base import BaseStates
 from states.tgbot_states import AddObj
-from utils import const
+from utils import const, get_data
 
 
 @dp.callback_query_handler(state=AddObj.chapter)
 async def get_chapter(query: types.CallbackQuery, state: FSMContext):
-    await state.update_data(chapter=query.data)
+    await state.update_data(chapter=['Глава', query.data])
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     await query.message.answer('Укажите раздел: ', reply_markup=kb.exit_kb())
     await state.set_state(AddObj.section)
 
 
 async def get_section(message: types.Message, state: FSMContext):
-    await state.update_data(section=message.text)
+    await state.update_data(section=['Раздел', message.text])
     await message.answer('Укажите название подобъекта: ',
                          reply_markup=kb.exit_kb())
     await state.set_state(AddObj.subobject_name)
 
 
 async def get_subobject_name(message: types.Message, state: FSMContext):
-    await state.update_data(subobject_name=message.text)
+    await state.update_data(subobject_name=['Название подобъекта',
+                                            message.text])
     await message.answer('Укажите cортировку: ', reply_markup=kb.exit_kb())
     await state.set_state(AddObj.sort)
 
 
 async def get_sort(message: types.Message, state: FSMContext):
-    await state.update_data(sort=message.text)
+    await state.update_data(sort=['Сортировка', message.text])
     new_kb = kb.add_subsystem_kb().add(kb.exit_button)
     await message.answer(
         'Укажите подсистемы, в которых подобъект будет отображаться',
@@ -37,7 +38,7 @@ async def get_sort(message: types.Message, state: FSMContext):
     await state.set_state(AddObj.subsystems)
 
 
-raw_message = 'Ваш выбор: '
+raw_message = const.YOUR_CHOISE
 message_id = ''
 
 
@@ -46,7 +47,7 @@ async def get_subsystems(query: types.CallbackQuery, state: FSMContext):
     global raw_message
     global message_id
     new_kb = kb.accept().add(kb.exit_button)
-    if raw_message == 'Ваш выбор: ' and query.data != 'accept':
+    if raw_message == const.YOUR_CHOISE and query.data != 'accept':
         raw_message += query.data
         msg = await query.message.answer(raw_message, reply_markup=new_kb)
         message_id = msg.message_id
@@ -56,12 +57,13 @@ async def get_subsystems(query: types.CallbackQuery, state: FSMContext):
                                     query.message.chat.id,
                                     message_id, reply_markup=new_kb)
     else:
-        await state.update_data(subsystems=raw_message[11:])
+        await state.update_data(subsystems=['Подсистемы', raw_message[11:]])
         await bot.delete_message(
             query.message.chat.id, query.message.message_id)
-        raw_message = 'Ваш выбор: '
+        raw_message = const.YOUR_CHOISE
+        await get_data.send_data(query=query, state=state)
         new_kb = kb.sure().add(kb.exit_button)
-        await query.message.answer('Вы уверены, что все данные верны?',
+        await query.message.answer(const.SURE,
                                    reply_markup=new_kb)
         await state.set_state(AddObj.sure)
     await query.answer()
@@ -135,14 +137,15 @@ async def edit(message: types.Message, state: FSMContext):
     data = await state.get_data()
     point = data['change']
     if point == 'name':
-        await state.update_data(name=message.text)
+        await state.update_data(name=['ФИО', message.text])
     elif point == 'section':
-        await state.update_data(section=message.text)
+        await state.update_data(section=['Раздел', message.text])
     elif point == 'subobject_name':
-        await state.update_data(subobject_name=message.text)
+        await state.update_data(subobject_name=['Название подобъекта',
+                                                message.text])
     elif point == 'sort':
-        await state.update_data(sort=message.text)
-    print(await state.get_data())
+        await state.update_data(sort=['Сортировка', message.text])
+    await get_data.send_data(message=message, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await message.answer(const.SURE,
                          reply_markup=new_kb)
@@ -152,7 +155,8 @@ async def edit(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(state=AddObj.edit)
 async def get_role(query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await state.update_data(role=query.data)
+    await state.update_data(role=['Роль', query.data])
+    await get_data.send_data(query=query, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await query.message.answer(const.SURE,
                                reply_markup=new_kb)
@@ -161,7 +165,8 @@ async def get_role(query: types.CallbackQuery, state: FSMContext):
 
 @dp.callback_query_handler(state=AddObj.edit_chapter)
 async def get_chapter_edit(query: types.CallbackQuery, state: FSMContext):
-    await state.update_data(chapter=query.data)
+    await get_data.send_data(query=query, state=state)
+    await state.update_data(chapter=['Глава', query.data])
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     new_kb = kb.sure().add(kb.exit_button)
     await query.message.answer(const.SURE,
