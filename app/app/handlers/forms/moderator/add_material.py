@@ -303,16 +303,17 @@ async def edit(message: types.Message, state: FSMContext):
     data = await state.get_data()
     point = data['change']
     if point == 'name':
-        await state.update_data(name=message.text)
+        await state.update_data(name=['ФИО', message.text])
     elif point == 'note':
-        await state.update_data(note=message.document.file_id)
+        await state.update_data(note=['Файл служебной записки',
+                                      message.document.file_id])
     elif point == 'storage':
-        await state.update_data(storage=message.text)
+        await state.update_data(storage=['Склад', message.text])
     elif point == 'excel':
-        await state.update_data(excel=message.document.file_id)
+        await state.update_data(excel=['Excel файл', message.document.file_id])
     elif point == 'obj':
-        await state.update_data(excel=message.text)
-    print(await state.get_data())
+        await state.update_data(obj=[const.WHICH_OBJECT, message.text])
+    await get_data.send_data(message=message, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await message.answer(const.SURE,
                          reply_markup=new_kb)
@@ -322,7 +323,8 @@ async def edit(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(state=AddMat.edit)
 async def get_role(query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await state.update_data(role=query.data)
+    await state.update_data(role=['Роль', query.data])
+    await get_data.send_data(query=query, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await query.message.answer(const.SURE,
                                reply_markup=new_kb)

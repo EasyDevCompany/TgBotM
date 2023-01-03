@@ -116,10 +116,32 @@ async def send_ticket(query: types.CallbackQuery, state: FSMContext):
     elif data['adm_or_tech'] == 'tech':
         chat = settings.TECH_CHAT_ID
     del data['adm_or_tech']
+    if 'change' in data:
+        del data['change']
     message = ''
-    for k, v in data.items():
-        message += f'{k}: {v}\n'
-    await bot.send_message(chat, message, reply_markup=kb.adm_kb())
+    for v in data.values():
+        message += f'{v[0]}: {v[1]}\n'
+    if 'extra_file' in data:
+        if data['extra_file'][1] is not None:
+            try:
+                await bot.send_media_group(chat, data['extra_file'][1])
+            except:
+                await bot.send_document(chat, data['extra_file'][1],
+                                        caption=message,
+                                        reply_markup=kb.adm_kb())
+        await bot.send_document(chat, data['note'][1],
+                                caption=message, reply_markup=kb.adm_kb())
+    elif 'note' in data and 'excel' in data:
+        media = types.MediaGroup()
+        media.attach_document(data['note'][1])
+        media.attach_document(data['excel'][1])
+        await bot.send_media_group(chat, media=media)
+        await bot.send_message(chat, message, reply_markup=kb.adm_kb())
+    elif 'note' in data:
+        await bot.send_document(chat, data['note'][1],
+                                caption=message, reply_markup=kb.adm_kb())
+    else:
+        await bot.send_message(chat, message, reply_markup=kb.adm_kb())
     await state.finish()
     await query.message.answer(const.START_MESSAGE, reply_markup=kb.start_work)
 
@@ -167,7 +189,7 @@ async def get_name(message: types.Message, state: FSMContext):
 
 
 async def get_role(query: types.CallbackQuery, state: FSMContext):
-    await state.update_data(role=query.data)
+    await state.update_data(role=['Роль', query.data])
     new_kb = kb.main_kb().add(kb.exit_button)
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     await query.message.answer(R_TYPE,
