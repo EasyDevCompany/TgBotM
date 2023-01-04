@@ -8,21 +8,21 @@ from app.utils import const, get_data
 
 
 async def get_sub_object(message: types.Message, state: FSMContext):
-    await state.update_data(sub_object=message.text)
+    await state.update_data(sub_object=['Подобъект', message.text])
     await message.answer('Укажите наименование вида работ',
                          reply_markup=kb.exit_kb())
     await state.set_state(AddViewWork.type_work)
 
 
 async def get_type_work(message: types.Message, state: FSMContext):
-    await state.update_data(type_work=message.text)
+    await state.update_data(type_work=['Вид работ', message.text])
     await message.answer('Укажите сортировку',
                          reply_markup=kb.exit_kb())
     await state.set_state(AddViewWork.sort)
 
 
 async def get_sort(message: types.Message, state: FSMContext):
-    await state.update_data(sort=message.text)
+    await state.update_data(sort=['Сортировка', message.text])
     new_kb = kb.add_subsystem_kb().add(kb.exit_button)
     await message.answer(
         'Укажите подсистемы, в которых вид работ будет отображаться',
@@ -30,7 +30,7 @@ async def get_sort(message: types.Message, state: FSMContext):
     await state.set_state(AddViewWork.subsystems)
 
 
-raw_message = 'Ваш выбор: '
+raw_message = const.YOUR_CHOISE
 message_id = ''
 
 
@@ -39,7 +39,7 @@ async def get_subsystems(query: types.CallbackQuery, state: FSMContext):
     global raw_message
     global message_id
     new_kb = kb.accept().add(kb.exit_button)
-    if raw_message == 'Ваш выбор: ' and query.data != 'accept':
+    if raw_message == const.YOUR_CHOISE and query.data != 'accept':
         raw_message += query.data
         msg = await query.message.answer(raw_message, reply_markup=new_kb)
         message_id = msg.message_id
@@ -49,10 +49,10 @@ async def get_subsystems(query: types.CallbackQuery, state: FSMContext):
                                     query.message.chat.id,
                                     message_id, reply_markup=new_kb)
     else:
-        await state.update_data(subsystems=raw_message[11:])
+        await state.update_data(subsystems=['Подсистемы', raw_message[11:]])
         await bot.delete_message(
             query.message.chat.id, query.message.message_id)
-        raw_message = 'Ваш выбор: '
+        raw_message = const.YOUR_CHOISE
         new_kb = kb.sure().add(kb.exit_button)
         await get_data.send_data(query=query, state=state)
         await query.message.answer(const.SURE,
@@ -121,14 +121,13 @@ async def edit(message: types.Message, state: FSMContext):
     data = await state.get_data()
     point = data['change']
     if point == 'type_work':
-        await state.update_data(type_work=message.text)
+        await state.update_data(type_work=['Вид работ', message.text])
     elif point == 'name':
-        await state.update_data(name=message.text)
+        await state.update_data(name=['ФИО', message.text])
     elif point == 'sub_object':
-        await state.update_data(sub_object=message.text)
+        await state.update_data(sub_object=['Подобъект', message.text])
     elif point == 'sort':
-        await state.update_data(sort=message.text)
-    print(await state.get_data())
+        await state.update_data(sort=['Сортировка', message.text])
     new_kb = kb.sure().add(kb.exit_button)
     await get_data.send_data(message=message, state=state)
     await message.answer(const.SURE,
@@ -139,7 +138,7 @@ async def edit(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(state=AddViewWork.edit)
 async def get_role(query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await state.update_data(role=query.data)
+    await state.update_data(role=['Роль', query.data])
     new_kb = kb.sure().add(kb.exit_button)
     await get_data.send_data(query=query, state=state)
     await query.message.answer(const.SURE,

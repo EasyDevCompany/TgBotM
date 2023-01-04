@@ -6,11 +6,11 @@ from loader import dp
 from app.core.container import Container
 from app import middlewares
 
-from app.handlers import start
+from app.handlers import start, chat
 import handlers.forms.moderator as moderator
 import handlers.forms.administrator as administrator
 
-
+chat.register_start_support_handler(dp=dp)
 start.register_start_handler(dp=dp)
 moderator.add_subobject.register(dp=dp)
 moderator.add_material.register(dp=dp)

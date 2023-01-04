@@ -1,7 +1,6 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from app.utils import const_add_subobjects as const
 
-
 start_work = InlineKeyboardMarkup().add(
     InlineKeyboardButton(
         text="Начать работу",
@@ -9,6 +8,12 @@ start_work = InlineKeyboardMarkup().add(
     )
 )
 
+start_support = InlineKeyboardMarkup().add(
+    InlineKeyboardButton(
+        text="Начать поддержку",
+        callback_data="start_support"
+    )
+)
 
 exit_button = InlineKeyboardButton(text='Отмена', callback_data="exit")
 skip_button = InlineKeyboardButton(text='Пропустить', callback_data='skip')
@@ -361,12 +366,26 @@ def what_edit():
 def adj_inv():
     keyboard = InlineKeyboardMarkup(resize_keyboard=True)
     b1 = InlineKeyboardButton(text='Наименование',
-                              callback_data='invoice_name')
+                              callback_data='Наименование')
     b2 = InlineKeyboardButton(text='Единицу измерения',
-                              callback_data='measurement_unit')
+                              callback_data='Единицу измерения')
     b3 = InlineKeyboardButton(text='Количество материалов',
-                              callback_data='quantity_material')
+                              callback_data='Количество материалов')
     keyboard.row(b1)
     keyboard.row(b2)
     keyboard.row(b3)
+    return keyboard
+
+
+def adm_kb():
+    keyboard = InlineKeyboardMarkup(resize_keyboard=True)
+    b1 = InlineKeyboardButton(
+        text='Взять в работу', callback_data='get'
+    )
+    b2 = InlineKeyboardButton(
+        text='Вернуть сотруднику для корректировки запроса',
+        callback_data='comeback'
+    )
+    keyboard.row(b1)
+    keyboard.row(b2)
     return keyboard

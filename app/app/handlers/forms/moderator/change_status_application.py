@@ -8,21 +8,30 @@ from app.utils import const, get_data
 
 
 async def get_note(message: types.Message, state: FSMContext):
-    await state.update_data(note=message.document.file_id)
-    await message.answer('Укажите номер заявки',
-                         reply_markup=kb.exit_kb())
-    await state.set_state(ChangeStatus.number_bid)
+    if message.content_type == 'document':
+        await state.update_data(note=['Файл служебной записки',
+                                      message.document.file_id])
+        await message.answer('Укажите номер заявки',
+                             reply_markup=kb.exit_kb())
+        await state.set_state(ChangeStatus.number_bid)
+    else:
+        await message.answer('Пожалуйста, загрузите документ')
+        await state.set_state(ChangeStatus.note)
 
 
 async def get_number_bid(message: types.Message, state: FSMContext):
-    await state.update_data(number=message.text)
-    await message.answer('Укажите какой статус необходимо поставить заявке',
-                         reply_markup=kb.exit_kb())
-    await state.set_state(ChangeStatus.status_in_bid)
+    if not message.text.isalpha():
+        await state.update_data(number=['Номер заявки', message.text])
+        await message.answer('Укажите какой статус необходимо поставить заявке',
+                             reply_markup=kb.exit_kb())
+        await state.set_state(ChangeStatus.status_in_bid)
+    else:
+        await message.answer('Пожалуйста, укажите номер заявки')
+        await state.set_state(ChangeStatus.number_bid)
 
 
 async def get_status_in_bid(message: types.Message, state: FSMContext):
-    await state.update_data(status=message.text)
+    await state.update_data(status=['Статус заявки', message.text])
     await get_data.send_data(message=message, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await message.answer(const.SURE,
@@ -83,14 +92,14 @@ async def edit(message: types.Message, state: FSMContext):
     data = await state.get_data()
     point = data['change']
     if point == 'name':
-        await state.update_data(name=message.text)
+        await state.update_data(name=['ФИО', message.text])
     elif point == 'note':
-        await state.update_data(note=message.document.file_id)
+        await state.update_data(note=['Файл служебной записки',
+                                      message.document.file_id])
     elif point == 'number':
-        await state.update_data(number=message.text)
+        await state.update_data(number=['Номер заявки', message.text])
     elif point == 'status':
-        await state.update_data(status=message.text)
-    print(await state.get_data())
+        await state.update_data(status=['Статус заявки', message.text])
     new_kb = kb.sure().add(kb.exit_button)
     await get_data.send_data(message=message, state=state)
     await message.answer(const.SURE,
@@ -101,7 +110,7 @@ async def edit(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(state=ChangeStatus.edit)
 async def get_role(query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await state.update_data(role=query.data)
+    await state.update_data(role=['Роль', query.data])
     new_kb = kb.sure().add(kb.exit_button)
     await get_data.send_data(query=query, state=state)
     await query.message.answer(const.SURE,
@@ -112,7 +121,7 @@ async def get_role(query: types.CallbackQuery, state: FSMContext):
 def register(dp: Dispatcher):
     dp.register_message_handler(get_note,
                                 state=ChangeStatus.note,
-                                content_types=['document'])
+                                content_types=['any'])
     dp.register_message_handler(get_number_bid, state=ChangeStatus.number_bid)
     dp.register_message_handler(get_status_in_bid,
                                 state=ChangeStatus.status_in_bid)

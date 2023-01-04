@@ -8,17 +8,17 @@ from app.utils import const, get_data
 
 
 async def get_sub_object(message: types.Message, state: FSMContext):
-    await state.update_data(sub_obj=message.text)
+    await state.update_data(sub_obj=['Подобъект', message.text])
     await message.answer('Укажите что именно необходимо отредактировать',
                          reply_markup=kb.exit_kb())
     await state.set_state(UpdateSubObject.select_type_work)
 
 
 async def get_type_work(message: types.Message, state: FSMContext):
-    await state.update_data(type_work=message.text)
+    await state.update_data(type_work=['Что редактировать', message.text])
     new_kb = kb.sure().add(kb.exit_button)
     await get_data.send_data(message=message, state=state)
-    await message.answer('Вы уверены, что все данные верны?',
+    await message.answer(const.SURE,
                          reply_markup=new_kb)
     await state.set_state(UpdateSubObject.sure)
 
@@ -68,12 +68,11 @@ async def edit(message: types.Message, state: FSMContext):
     data = await state.get_data()
     point = data['change']
     if point == 'name':
-        await state.update_data(name=message.text)
+        await state.update_data(name=['ФИО', message.text])
     elif point == 'sub_obj':
-        await state.update_data(sub_obj=message.text)
+        await state.update_data(sub_obj=['Подобъект', message.text])
     elif point == 'type_work':
-        await state.update_data(type_work=message.text)
-    print(await state.get_data())
+        await state.update_data(type_work=['Что редактировать', message.text])
     new_kb = kb.sure().add(kb.exit_button)
     await get_data.send_data(message=message, state=state)
     await message.answer(const.SURE,
@@ -84,7 +83,7 @@ async def edit(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(state=UpdateSubObject.edit)
 async def get_role(query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await state.update_data(role=query.data)
+    await state.update_data(role=['Роль', query.data])
     new_kb = kb.sure().add(kb.exit_button)
     await get_data.send_data(query=query, state=state)
     await query.message.answer(const.SURE,

@@ -8,21 +8,34 @@ from app.utils import const, get_data
 
 
 async def get_note(message: types.Message, state: FSMContext):
-    await state.update_data(note=message.document.file_id)
-    await message.answer(
-        'Укажите название объекта, который необходимо добавить: ',
-        reply_markup=kb.exit_kb())
-    await state.set_state(AddObjAdm.obj_name)
+    if message.content_type == 'document':
+        await state.update_data(note=['Файл служебной записки',
+                                      message.document.file_id])
+        await message.answer(
+            'Укажите название объекта, который необходимо добавить: ',
+            reply_markup=kb.exit_kb())
+        await state.set_state(AddObjAdm.obj_name)
+    else:
+        await message.answer('Пожалуйста, загрузите документ')
+        await state.set_state(AddObjAdm.note)
 
 
 async def get_obj_name(message: types.Message, state: FSMContext):
-    await state.update_data(obj_name=message.text)
-    await message.answer('Укажите титул объекта: ', reply_markup=kb.exit_kb())
-    await state.set_state(AddObjAdm.title)
+    if message.content_type == 'text':
+        if not message.text.isdigit():
+            await state.update_data(obj_name=['Название объекта', message.text])
+            await message.answer('Укажите титул объекта: ', reply_markup=kb.exit_kb())
+            await state.set_state(AddObjAdm.title)
+        else:
+            await message.answer('Название объекта не может состоять только из цифр')
+            await state.set_state(AddObjAdm.obj_name)
+    else:
+        await message.answer('Пожалуйста, укажите название объекта')
+        await state.set_state(AddObjAdm.obj_name)
 
 
 async def get_title(message: types.Message, state: FSMContext):
-    await state.update_data(title=message.text)
+    await state.update_data(title=['Титул объекта', message.text])
     new_kb = kb.storage_kb().add(kb.exit_button)
     await message.answer('Укажите склад объекта:',
                          reply_markup=new_kb)
@@ -33,12 +46,14 @@ async def get_title(message: types.Message, state: FSMContext):
 async def get_new_or_exist(query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     if query.data == 'exist_storage':
-        await state.update_data(new_or_exist='exist')
+        await state.update_data(new_or_exist=['Уже существующий или новый',
+                                              'существующий'])
         await query.message.answer('Укажите склад: ',
                                    reply_markup=kb.exit_kb())
         await state.set_state(AddObjAdm.storage)
     elif query.data == 'new_storage':
-        await state.update_data(new_or_exist='new')
+        await state.update_data(new_or_exist=['Уже существующий или новый',
+                                              'новый'])
         await query.message.answer('Укажите название нового склада, '
                                    'Ф.И.О ответственного лица и титул',
                                    reply_markup=kb.exit_kb())
@@ -46,11 +61,20 @@ async def get_new_or_exist(query: types.CallbackQuery, state: FSMContext):
 
 
 async def get_storage(message: types.Message, state: FSMContext):
-    await state.update_data(storage=message.text)
-    await get_data.send_data(message=message, state=state)
-    await message.answer('Вы уверены, что все данные верны?',
-                         reply_markup=kb.sure())
-    await state.set_state(AddObjAdm.sure)
+    if message.content_type == 'text':
+        if not message.text.isdigit():
+            await state.update_data(storage=['Склад', message.text])
+            await get_data.send_data(message=message, state=state)
+            new_kb = kb.sure().add(kb.exit_button)
+            await message.answer(const.SURE,
+                                 reply_markup=kb.sure())
+            await state.set_state(AddObjAdm.sure)
+        else:
+            await message.answer('Название склада не может состоять только из цифр')
+            await state.set_state(AddObjAdm.storage)
+    else:
+        await message.answer('Пожалуйста, напишите название склада')
+        await state.set_state(AddObjAdm.storage)
 
 
 @dp.callback_query_handler(state=AddObjAdm.sure)
@@ -120,16 +144,16 @@ async def edit(message: types.Message, state: FSMContext):
     data = await state.get_data()
     point = data['change']
     if point == 'name':
-        await state.update_data(name=message.text)
+        await state.update_data(name=['ФИО', message.text])
     elif point == 'note':
-        await state.update_data(note=message.document.file_id)
+        await state.update_data(note=['Файл служебной записки',
+                                      message.document.file_id])
     elif point == 'obj_name':
-        await state.update_data(obj_name=message.text)
+        await state.update_data(obj_name=['Название объекта', message.text])
     elif point == 'title':
-        await state.update_data(title=message.text)
+        await state.update_data(title=['Титул объекта', message.text])
     elif point == 'storage':
-        await state.update_data(storage=message.text)
-    print(await state.get_data())
+        await state.update_data(storage=['Склад', message.text])
     new_kb = kb.sure().add(kb.exit_button)
     await get_data.send_data(message=message, state=state)
     await message.answer(const.SURE,
@@ -140,7 +164,7 @@ async def edit(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(state=AddObjAdm.edit)
 async def get_role(query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await state.update_data(role=query.data)
+    await state.update_data(role=['Роль', query.data])
     new_kb = kb.sure().add(kb.exit_button)
     await get_data.send_data(query=query, state=state)
     await query.message.answer(const.SURE,
@@ -151,10 +175,10 @@ async def get_role(query: types.CallbackQuery, state: FSMContext):
 def register(dp: Dispatcher):
     dp.register_callback_query_handler(get_new_or_exist, state=AddObjAdm.new_or_exist)
     dp.register_message_handler(
-        get_note, state=AddObjAdm.note, content_types=['document'])
-    dp.register_message_handler(get_obj_name, state=AddObjAdm.obj_name)
+        get_note, state=AddObjAdm.note, content_types=['any'])
+    dp.register_message_handler(get_obj_name, state=AddObjAdm.obj_name, content_types=['any'])
     dp.register_message_handler(get_title, state=AddObjAdm.title)
-    dp.register_message_handler(get_storage, state=AddObjAdm.storage)
+    dp.register_message_handler(get_storage, state=AddObjAdm.storage, content_types=['any'])
     dp.register_message_handler(edit,
                                 state=AddObjAdm.edit,
                                 content_types=['text', 'document'])
