@@ -3,7 +3,6 @@ from flask_admin import Admin
 from flask_login import LoginManager, login_user
 from uuid import uuid4
 
-
 from app.db.session import SyncSession, scope
 from app.core.config import settings
 
@@ -19,7 +18,6 @@ from app.models.application import Application
 from loguru import logger
 
 session = SyncSession(settings.SYNC_SQLALCHEMY_DATABASE_URI)
-
 
 secureApp = Flask(__name__)
 login = LoginManager(secureApp)
@@ -54,7 +52,6 @@ class Middleware:
 
 
 secureApp.wsgi_app = Middleware(secureApp.wsgi_app)
-
 
 # create administrator
 admin = Admin(secureApp, name='Admin', base_template='my_master.html', template_mode='bootstrap4')

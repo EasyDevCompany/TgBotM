@@ -30,3 +30,5 @@ class SyncSession:
 
     def create_database(self):
         Base.metadata.create_all(bind=self.sync_engine)
+
+

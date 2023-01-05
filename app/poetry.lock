@@ -1099,4 +1099,8 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
+<<<<<<< HEAD
 content-hash = "ec3ce90de7ead22c87adc05f2696a439d9d239145f6c07fa5591f1d55faa308d"
+=======
+content-hash = "ab3d64a69f2052c871e1c8103bd64ce0bc77afc8b27fda90453eddbe02e0caac"
+>>>>>>> 91e7b3d (добавил авторизацию и аунтефикацию в админку, добавил генерацию админа, добавил сервис и репозиторий заявок и для него методы)
