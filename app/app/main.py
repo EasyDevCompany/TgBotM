@@ -6,6 +6,10 @@ from loader import dp
 from app.core.container import Container
 from app import middlewares
 
+from app.models.telegram_user import TelegramUser
+from app.models.application import Application
+from app.models.user import User
+
 from app.handlers import start
 
 start.register_start_handler(dp=dp)

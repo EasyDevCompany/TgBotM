@@ -1,30 +1,37 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, abort
 from flask_admin import Admin
-from flask_login import LoginManager
+from flask_login import LoginManager, login_user
 from uuid import uuid4
-from sqlalchemy import select
 
 from app.db.session import SyncSession, scope
 from app.core.config import settings
 
 from app.admin.views.tg_user import TelegramUserView
 from app.admin.views.application import ApplicationView
+from app.admin.views.users import UsersViews
 
+from app.models.user import User
 from app.models.telegram_user import TelegramUser
-from app.models.job_application import JobApplication
+from app.models.application import Application
+
+
+from loguru import logger
 
 session = SyncSession(settings.SYNC_SQLALCHEMY_DATABASE_URI)
 
-# Instantiate the Flask application with configurations
 secureApp = Flask(__name__)
+login = LoginManager(secureApp)
 
 
-# Configure a specific Bootswatch theme
+@login.user_loader
+def load_user(user_id):
+    return session.session.query(User).filter(User.id == user_id).first()
+
+
 secureApp.config['SECRET_KEY'] = 'secretkey'
 
 
-# set session in scope
-class middleware():
+class Middleware:
     '''
     Simple WSGI middleware
     '''
@@ -36,32 +43,39 @@ class middleware():
         scope.set(str(uuid4()))        
         try:
             return self.app(environ, start_response)
-        except:
+        except Exception as _exc:
+            print(_exc)
             session.session.rollback()
         finally:
             session.session.expunge_all()
             session.scoped_session.remove()
 
 
-secureApp.wsgi_app = middleware(secureApp.wsgi_app)
-
-
-#settings for auth
-# @login.user_loader
-# def load_user(user_id):
-#     return sync_session.execute(
-#         select(User).filter_by(id=user_id)
-#     ).scalars().first()
-
+secureApp.wsgi_app = Middleware(secureApp.wsgi_app)
 
 # create administrator
 admin = Admin(secureApp, name='Admin', base_template='my_master.html', template_mode='bootstrap4')
-# Create a ModelView to add to our administrative interface
+# Add view
 admin.add_view(TelegramUserView(TelegramUser, session.session))
-admin.add_view(ApplicationView(JobApplication, session.session))
-# Add administrative views to Flask-Admin
+admin.add_view(ApplicationView(Application, session.session))
+admin.add_view(UsersViews(User, session.session))
 
-# Define the index route
-# @secureApp.route('/')
-# def index():
-#     return render_template('index.html')
+
+@secureApp.route("/admin/login/", methods=['POST', 'GET'])
+def login():
+    logger.info("in func")
+    if request.method == 'POST':
+        login = request.form.get('login')
+        password = request.form.get('password')
+        logger.info(f"{login}")
+        logger.info(f"{password}")
+        user = session.session.query(User).filter(
+            User.password == password,
+            User.login == login
+        ).first()
+        logger.info(f"{user}")
+        if user.is_active:
+            login_user(user)
+        return redirect('/admin')
+    else:
+        return render_template('index.html')
