@@ -36,7 +36,7 @@ class RepositoryBase(Generic[ModelType, ]):
             update_data = obj_in
         else:
             update_data = obj_in.dict(exclude_unset=True)
-        for field in obj_data:
+        for field in update_data:
             if field in update_data:
                 setattr(db_obj, field, update_data[field])
         self._session.add(db_obj)
