@@ -1,6 +1,7 @@
 from app.repository.telegarm_user import RepositoryTelegramUser
 from app.repository.application import ApplicationRepository
 from app.models.application import Application
+from loguru import logger
 
 
 class ApplicationService:
@@ -15,8 +16,12 @@ class ApplicationService:
 
     async def create(self, obj_in: dict, user_id: int):
         user = self._repository_telegram_user.get(user_id=user_id)
+        obj_in["user_id"] = user.id
+        obj_in["user"] = user
+        logger.info(obj_in)
         return self._repository_application.create(
-            obj_in=obj_in.update({"user_id": user_id, "user": user})
+            obj_in=obj_in,
+            commit=True
         )
 
     async def get(self, application_id: int):

@@ -3,7 +3,9 @@ from dependency_injector.wiring import inject, Provide
 from app.core.container import Container
 
 from app.models.telegram_user import TelegramUser
+from app.models.application import Application
 from app.services.tg_user_service import TelegramUserService
+from app.services.application import ApplicationService
 
 from aiogram import types, Dispatcher
 from aiogram.dispatcher.filters import CommandStart
@@ -33,5 +35,25 @@ async def start(
     )
 
 
+@inject
+async def test_func(
+        message: types.Message,
+        application_service: ApplicationService = Provide[Container.application_service]
+):
+    user_id = message.from_user.id
+    await application_service.create(obj_in={
+            "role": Application.Role.curator,
+            "request_answered": Application.RequestAnswered.moderator,
+            "request_type": Application.RequestType.add_edo,
+            "field_one": "test",
+            "field_two": "test",
+            "field_three": "test",
+            "field_four": "test"
+        },
+        user_id=user_id
+    )
+
+
 def register_start_handler(dp: Dispatcher):
     dp.register_message_handler(start, CommandStart())
+    dp.register_message_handler(test_func, commands=["test"])
