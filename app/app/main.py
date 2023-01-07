@@ -1,16 +1,18 @@
 from aiogram.utils import executor
 from aiogram import Dispatcher
 
-from loader import dp
+from loader import dp, bot
 
 from app.core.container import Container
 from app import middlewares
+from app.models.telegram_user import TelegramUser
+from app.models.application import Application
+from app.models.user import User
 
 from app.handlers import start, chat
 import handlers.forms.moderator as moderator
 import handlers.forms.administrator as administrator
 
-chat.register_start_support_handler(dp=dp)
 start.register_start_handler(dp=dp)
 moderator.add_subobject.register(dp=dp)
 moderator.add_material.register(dp=dp)
@@ -26,6 +28,7 @@ administrator.add_edo.register(dp=dp)
 administrator.open_edo.register(dp=dp)
 administrator.edit_some_moving.register(dp=dp)
 administrator.adjustment_of_supplies.register(dp=dp)
+
 
 
 def on_startup(dispatcher: Dispatcher):

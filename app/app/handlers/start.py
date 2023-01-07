@@ -1,8 +1,12 @@
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.callback_data import CallbackData
 from dependency_injector.wiring import inject, Provide
 import re
 
 from app.core.config import settings
 from app.core.container import Container
+from app.models.application import Application
+from app.services.application import ApplicationService
 
 from app.models.telegram_user import TelegramUser
 from app.services.tg_user_service import TelegramUserService
@@ -69,20 +73,34 @@ async def send_ticket(query: types.CallbackQuery, state: FSMContext):
         media = types.MediaGroup()
         media.attach_document(data['note'][1])
         media.attach_document(data['excel'][1])
-        media.attach_document(data['several_naming'][1])
         await bot.send_media_group(chat, media=media)
         await bot.send_message(chat, message, reply_markup=kb.adm_kb())
     elif 'note' in data:
         await bot.send_document(chat, data['note'][1],
-                                caption=message, reply_markup=kb.adm_kb())
-    elif 'several_naming' in data:
-        await bot.send_document(chat, data['several_naming'][1],
                                 caption=message, reply_markup=kb.adm_kb())
     else:
         await bot.send_message(chat, message, reply_markup=kb.adm_kb())
     await state.finish()
     await query.message.answer(const.START_MESSAGE, reply_markup=kb.start_work)
 
+
+@inject
+async def test_func(
+        message: types.Message,
+        application_service: ApplicationService = Provide[Container.application_service]
+):
+    user_id = message.from_user.id
+    await application_service.create(obj_in={
+            "role": Application.Role.curator,
+            "request_answered": Application.RequestAnswered.moderator,
+            "request_type": Application.RequestType.add_edo,
+            "field_one": "test",
+            "field_two": "test",
+            "field_three": "test",
+            "field_four": "test"
+        },
+        user_id=user_id
+    )
 
 @inject
 async def start(
@@ -105,9 +123,9 @@ async def start(
 
 
 @dp.callback_query_handler(text='start_work')
-async def create_ticket(query: types.CallbackQuery, state: FSMContext):
-    await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await query.message.answer('Введите ФИО', reply_markup=kb.exit_kb())
+async def create_ticket(call: types.CallbackQuery, state: FSMContext):
+    await bot.delete_message(call.message.chat.id, call.message.message_id)
+    await call.message.answer(text='Введите ФИО', reply_markup=kb.exit_kb())
     await state.set_state(BaseStates.fio)
 
 
@@ -258,4 +276,4 @@ def register_start_handler(dp: Dispatcher):
     dp.register_callback_query_handler(get_role, state=BaseStates.role)
     dp.register_callback_query_handler(get_request_type, state=BaseStates.request_type)
     dp.register_callback_query_handler(send_ticket, text='send', state='*')
-
+    dp.register_message_handler(test_func, commands=["test"])

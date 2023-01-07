@@ -13,8 +13,8 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 
-class JobApplication(Base):
-    __tablename__ = "job_application"
+class Application(Base):
+    __tablename__ = "application"
 
     class Role(str, enum.Enum):
         accountant = "accountant"  # Бухгалтер
@@ -53,26 +53,34 @@ class JobApplication(Base):
         adjustment_of_supplies = "adjustment_of_supplies"  # Корректировка поставок
 
     class ApplicationStatus(str, enum.Enum):
+        waiting_for_taking = "waiting_for_taking"
         pending = "pending"
         success = "success"
         return_application = "return_application"
+        request_corrected_by_user = "request_corrected_by_user"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("telegram_user.id"))
-    user = relationship("TelegramUser")
+    user_id = Column(
+        Integer,
+        ForeignKey("telegramuser.id"),
+        index=True,
+        nullable=True
+    )
     date = Column(DateTime, default=datetime.utcnow)
     role = Column(Enum(Role))
     application_status = Column(Enum(ApplicationStatus), default=ApplicationStatus.pending)
     request_answered = Column(Enum(RequestAnswered))
     request_type = Column(Enum(RequestType))
-    field_one = Column(String)
-    field_two = Column(String)
-    field_four = Column(String)
-    field_five = Column(String, nullable=True)
-    six_field = Column(String, nullable=True)
-    seven_field = Column(String, nullable=True)
-    eight_field = Column(String, nullable=True)
-    nine_field = Column(String, nullable=True)
+    field_one = Column(String(300))
+    field_two = Column(String(300))
+    field_three = Column(String(300))
+    field_four = Column(String(300))
+    field_five = Column(String(300), nullable=True)
+    field_six = Column(String(300), nullable=True)
+    field_seven = Column(String(300), nullable=True)
+    field_eight = Column(String(300), nullable=True)
+    field_nine = Column(String(300), nullable=True)
+    user = relationship("TelegramUser")
 
-    def __repr__(self) -> str:
-        return f"{self.user_id} {self.role}"
+    def repr(self) -> str:
+        return f"{self.role}"

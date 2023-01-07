@@ -386,6 +386,12 @@ def adm_kb():
         text='Вернуть сотруднику для корректировки запроса',
         callback_data='comeback'
     )
+    b3 = InlineKeyboardButton(
+        text='Запрос обработан',
+        callback_data='done'
+    )
     keyboard.row(b1)
     keyboard.row(b2)
+    keyboard.row(b3)
     return keyboard
+

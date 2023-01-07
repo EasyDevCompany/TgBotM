@@ -1,5 +1,5 @@
 from typing import Generic, Optional, Type, TypeVar
-
+from loguru import logger
 
 ModelType = TypeVar("ModelType")
 
@@ -12,6 +12,7 @@ class RepositoryBase(Generic[ModelType, ]):
     def create(
         self, obj_in, commit=False
     ) -> ModelType:
+        logger.info(f"{obj_in}")
         obj_in_data = dict(obj_in)
         db_obj = self._model(**obj_in_data)
         self._session.add(db_obj)
@@ -36,7 +37,7 @@ class RepositoryBase(Generic[ModelType, ]):
             update_data = obj_in
         else:
             update_data = obj_in.dict(exclude_unset=True)
-        for field in obj_data:
+        for field in update_data:
             if field in update_data:
                 setattr(db_obj, field, update_data[field])
         self._session.add(db_obj)

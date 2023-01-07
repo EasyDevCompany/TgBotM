@@ -14,7 +14,7 @@ from sqlalchemy.sql import func
 
 
 class TelegramUser(Base):
-    __tablename__ = "telegram_user"
+    __tablename__ = "telegramuser"
 
     class UserType(str, enum.Enum):
         employee = "employee"

@@ -67,7 +67,7 @@ async def get_storage(message: types.Message, state: FSMContext):
             await get_data.send_data(message=message, state=state)
             new_kb = kb.sure().add(kb.exit_button)
             await message.answer(const.SURE,
-                                 reply_markup=kb.sure())
+                                 reply_markup=new_kb)
             await state.set_state(AddObjAdm.sure)
         else:
             await message.answer('Название склада не может состоять только из цифр')

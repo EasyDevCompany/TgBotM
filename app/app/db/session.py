@@ -1,7 +1,12 @@
+from loguru import logger
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy import create_engine
 from contextvars import ContextVar
 from app.db.base import Base
+
+from app.models.telegram_user import TelegramUser
+from app.models.application import Application
+from app.models.user import User
 
 scope: ContextVar = ContextVar('db_session_scope')
 
@@ -18,7 +23,7 @@ class SyncSession:
     def __init__(self, db_url: str, dispose_session: bool = False):
         self.db_url = db_url
         self.dispose_session = dispose_session
-        self.sync_engine = create_engine(self.db_url, pool_pre_ping=True)
+        self.sync_engine = create_engine(self.db_url, pool_pre_ping=True, echo=True)
         self.sync_session_factory = sessionmaker(bind=self.sync_engine, autoflush=False, expire_on_commit=False)
         self.scoped_session = scoped_session(self.sync_session_factory, scopefunc=scopefunc)
         self.session = self.scoped_session()
