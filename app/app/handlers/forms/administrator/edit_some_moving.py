@@ -8,8 +8,7 @@ from utils import const, get_data
 
 
 async def get_note(message: types.Message, state: FSMContext):
-    await state.update_data(note=['Файл служебной записки',
-                                  message.document.file_id])
+    await state.update_data(field_one=message.document.file_id)
     await message.answer(
         'Укажите номер заявки, если перемещение по заявке',
         reply_markup=kb.exit_kb())
@@ -17,13 +16,13 @@ async def get_note(message: types.Message, state: FSMContext):
 
 
 async def get_ticket(message: types.Message, state: FSMContext):
-    await state.update_data(number_ticket=['Номер заявки', message.text])
+    await state.update_data(field_two=message.text)
     await message.answer('Укажите номер накладной', reply_markup=kb.exit_kb())
     await state.set_state(EditMoveAdm.number_invoice)
 
 
 async def get_invoice(message: types.Message, state: FSMContext):
-    await state.update_data(number_invoice=['Номер накладной', message.text])
+    await state.update_data(field_three=message.text)
     await message.answer(
         'Укажите исходящий склад\n(откуда было отправлено)',
         reply_markup=kb.exit_kb())
@@ -31,7 +30,7 @@ async def get_invoice(message: types.Message, state: FSMContext):
 
 
 async def storage_out(message: types.Message, state: FSMContext):
-    await state.update_data(storage_out=['Исходящий склад', message.text])
+    await state.update_data(field_four=message.text)
     await message.answer(
         'Укажите входящий склад\n(куда было отправлено)',
         reply_markup=kb.exit_kb())
@@ -39,7 +38,7 @@ async def storage_out(message: types.Message, state: FSMContext):
 
 
 async def storage_in(message: types.Message, state: FSMContext):
-    await state.update_data(storage_in=['Входящий склад', message.text])
+    await state.update_data(field_five=message.text)
     new_kb = kb.status_kb().add(kb.exit_button)
     await message.answer('Укажите статус перемещения', reply_markup=new_kb)
     await state.set_state(EditMoveAdm.status)
@@ -47,7 +46,7 @@ async def storage_in(message: types.Message, state: FSMContext):
 
 @dp.callback_query_handler(state=EditMoveAdm.status)
 async def get_status(query: types.CallbackQuery, state: FSMContext):
-    await state.update_data(status=['Статус', query.data])
+    await state.update_data(field_six=query.data)
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     new_kb = kb.reason_kb().add(kb.exit_button)
     await query.message.answer(const.REASON, reply_markup=new_kb)
@@ -57,7 +56,7 @@ async def get_status(query: types.CallbackQuery, state: FSMContext):
 @dp.callback_query_handler(state=EditMoveAdm.reason)
 async def get_reason(query: types.CallbackQuery, state: FSMContext):
     if query.data != 'Другое':
-        await state.update_data(reason=[const.REASON, query.data])
+        await state.update_data(field_seven=query.data)
         await bot.delete_message(query.message.chat.id,
                                  query.message.message_id)
         await query.message.answer(
@@ -75,12 +74,12 @@ async def get_reason(query: types.CallbackQuery, state: FSMContext):
 async def get_another_reason(message: types.Message, state: FSMContext):
     data = await state.get_data()
     if 'description' not in data:
-        await state.update_data(reason=[const.REASON, message.text])
+        await state.update_data(field_seven=message.text)
         await message.answer(const.DESCRIPTION_MOVE,
                              reply_markup=kb.exit_kb())
         await state.set_state(EditMoveAdm.description)
     else:
-        await state.update_data(reason=[const.REASON, message.text])
+        await state.update_data(field_seven=message.text)
         await get_data.send_data(message=message, state=state)
         await message.answer(const.SURE,
                              reply_markup=kb.sure())
@@ -88,7 +87,7 @@ async def get_another_reason(message: types.Message, state: FSMContext):
 
 
 async def get_description(message: types.Message, state: FSMContext):
-    await state.update_data(description=['Описание', message.text])
+    await state.update_data(field_eight=message.text)
     await get_data.send_data(message=message, state=state)
     await message.answer(const.SURE,
                          reply_markup=kb.sure())
@@ -188,21 +187,19 @@ async def edit(message: types.Message, state: FSMContext):
     data = await state.get_data()
     point = data['change']
     if point == 'name':
-        await state.update_data(name=['ФИО', message.text])
+        await state.update_data(name=message.text)
     elif point == 'note':
-        await state.update_data(note=['Файл служебной записки',
-                                      message.document.file_id])
+        await state.update_data(field_one=message.document.file_id)
     elif point == 'number_ticket':
-        await state.update_data(number_ticket=['Номер заявки', message.text])
+        await state.update_data(field_two=message.text)
     elif point == 'number_invoice':
-        await state.update_data(number_invoice=['Номер накладной',
-                                                message.text])
+        await state.update_data(field_three=message.text)
     elif point == 'storage_out':
-        await state.update_data(storage_out=['Исходящий склад', message.text])
+        await state.update_data(field_four=message.text)
     elif point == 'storage_in':
-        await state.update_data(storage_in=['Входящий склад', message.text])
+        await state.update_data(field_five=message.text)
     elif point == 'description':
-        await state.update_data(description=['Описание', message.text])
+        await state.update_data(field_eight=['Описание', message.text])
     await get_data.send_data(message=message, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await message.answer(const.SURE, reply_markup=new_kb)
@@ -212,7 +209,7 @@ async def edit(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(state=EditMoveAdm.edit)
 async def get_role(query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await state.update_data(role=['Роль', query.data])
+    await state.update_data(role=query.data)
     await get_data.send_data(query=query, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await query.message.answer(const.SURE, reply_markup=new_kb)
@@ -221,7 +218,7 @@ async def get_role(query: types.CallbackQuery, state: FSMContext):
 
 @dp.callback_query_handler(state=EditMoveAdm.status_edit)
 async def get_status_edit(query: types.CallbackQuery, state: FSMContext):
-    await state.update_data(status=['Статус', query.data])
+    await state.update_data(field_six=query.data)
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     await get_data.send_data(query=query, state=state)
     new_kb = kb.sure().add(kb.exit_button)
@@ -232,7 +229,7 @@ async def get_status_edit(query: types.CallbackQuery, state: FSMContext):
 @dp.callback_query_handler(state=EditMoveAdm.reason_edit)
 async def get_reason_edit(query: types.CallbackQuery, state: FSMContext):
     if query.data != 'Другое':
-        await state.update_data(reason=[const.REASON, query.data])
+        await state.update_data(field_seven=query.data)
         await bot.delete_message(query.message.chat.id,
                                  query.message.message_id)
         await get_data.send_data(query=query, state=state)

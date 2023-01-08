@@ -8,8 +8,7 @@ from utils import const, get_data
 
 
 async def get_note(message: types.Message, state: FSMContext):
-    await state.update_data(note=['Файл служебной записки',
-                                  message.document.file_id])
+    await state.update_data(field_one=message.document.file_id)
     await message.answer(
         'Укажите название объекта, который необходимо добавить: ',
         reply_markup=kb.exit_kb())
@@ -17,13 +16,13 @@ async def get_note(message: types.Message, state: FSMContext):
 
 
 async def get_obj_name(message: types.Message, state: FSMContext):
-    await state.update_data(obj_name=['Название объекта', message.text])
+    await state.update_data(field_two=message.text)
     await message.answer('Укажите титул объекта: ', reply_markup=kb.exit_kb())
     await state.set_state(AddObjAdm.title)
 
 
 async def get_title(message: types.Message, state: FSMContext):
-    await state.update_data(title=['Титул объекта', message.text])
+    await state.update_data(field_three=message.text)
     new_kb = kb.storage_kb().add(kb.exit_button)
     await message.answer('Укажите склад объекта:',
                          reply_markup=new_kb)
@@ -34,14 +33,12 @@ async def get_title(message: types.Message, state: FSMContext):
 async def get_new_or_exist(query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     if query.data == 'exist_storage':
-        await state.update_data(new_or_exist=['Уже существующий или новый',
-                                              'существующий'])
+        await state.update_data(field_four='существующий')
         await query.message.answer('Укажите склад: ',
                                    reply_markup=kb.exit_kb())
         await state.set_state(AddObjAdm.storage)
     elif query.data == 'new_storage':
-        await state.update_data(new_or_exist=['Уже существующий или новый',
-                                              'новый'])
+        await state.update_data(field_four='новый')
         await query.message.answer('Укажите название нового склада, '
                                    'Ф.И.О ответственного лица и титул',
                                    reply_markup=kb.exit_kb())
@@ -49,7 +46,7 @@ async def get_new_or_exist(query: types.CallbackQuery, state: FSMContext):
 
 
 async def get_storage(message: types.Message, state: FSMContext):
-    await state.update_data(storage=['Склад', message.text])
+    await state.update_data(field_five=message.text)
     await get_data.send_data(message=message, state=state)
     await message.answer(const.SURE,
                          reply_markup=kb.sure())
@@ -123,16 +120,15 @@ async def edit(message: types.Message, state: FSMContext):
     data = await state.get_data()
     point = data['change']
     if point == 'name':
-        await state.update_data(name=['ФИО', message.text])
+        await state.update_data(name=message.text)
     elif point == 'note':
-        await state.update_data(note=['Файл служебной записки',
-                                      message.document.file_id])
+        await state.update_data(field_one=message.document.file_id)
     elif point == 'obj_name':
-        await state.update_data(obj_name=['Название объекта', message.text])
+        await state.update_data(field_two=message.text)
     elif point == 'title':
-        await state.update_data(title=['Титул объекта', message.text])
+        await state.update_data(field_three=message.text)
     elif point == 'storage':
-        await state.update_data(storage=['Склад', message.text])
+        await state.update_data(field_four=message.text)
     await get_data.send_data(message=message, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await message.answer(const.SURE,
@@ -143,7 +139,7 @@ async def edit(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(state=AddObjAdm.edit)
 async def get_role(query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await state.update_data(role=['Роль', query.data])
+    await state.update_data(role=query.data)
     await get_data.send_data(query=query, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await query.message.answer(const.SURE,

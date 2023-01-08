@@ -8,22 +8,21 @@ from utils import const, get_data
 
 
 async def get_note(message: types.Message, state: FSMContext):
-    await state.update_data(note=['Файл служебной записки',
-                                  message.document.file_id])
+    await state.update_data(field_one=message.document.file_id)
     await message.answer('Выберите склад, куда необходимо добавить остатки: ',
                          reply_markup=kb.exit_kb())
     await state.set_state(AddMat.storage)
 
 
 async def get_storage(message: types.Message, state: FSMContext):
-    await state.update_data(storage=['Склад', message.text])
+    await state.update_data(field_two=message.text)
     await message.answer('Excel файл с данными по наименованиям по формату: ',
                          reply_markup=kb.exit_kb())
     await state.set_state(AddMat.excel)
 
 
 async def get_excel(message: types.Message, state: FSMContext):
-    await state.update_data(excel=['Excel файл', message.document.file_id])
+    await state.update_data(field_three=message.document.file_id)
     new_kb = kb.reserve_or_leave().add(kb.exit_button)
     await message.answer('Укажите, необходимо ли добавлять остатки на резерв '
                          'или на свободные остатки', reply_markup=new_kb)
@@ -32,7 +31,7 @@ async def get_excel(message: types.Message, state: FSMContext):
 
 @dp.callback_query_handler(state=AddMat.myc)
 async def get_choise(query: types.CallbackQuery, state: FSMContext):
-    await state.update_data(choise=['Действие с остатками', query.data])
+    await state.update_data(field_four=query.data)
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     if query.data == 'reserve':
         await query.message.answer('Если остатки на резерве, то на какой '
@@ -40,7 +39,7 @@ async def get_choise(query: types.CallbackQuery, state: FSMContext):
                                    reply_markup=kb.exit_kb())
         await state.set_state(AddMat.obj)
     elif query.data == 'leave':
-        await state.update_data(obj=[const.WHICH_OBJECT, 'None'])
+        await state.update_data(field_five=None)
         await get_data.send_data(query=query, state=state)
         await query.message.answer(const.SURE,
                                    reply_markup=kb.sure())
@@ -48,7 +47,7 @@ async def get_choise(query: types.CallbackQuery, state: FSMContext):
 
 
 async def get_obj(message: types.Message, state: FSMContext):
-    await state.update_data(obj=[const.WHICH_OBJECT, message.text])
+    await state.update_data(field_five=message.text)
     await get_data.send_data(message=message, state=state)
     await message.answer(const.SURE,
                          reply_markup=kb.sure())
@@ -125,16 +124,15 @@ async def edit(message: types.Message, state: FSMContext):
     data = await state.get_data()
     point = data['change']
     if point == 'name':
-        await state.update_data(name=['ФИО', message.text])
+        await state.update_data(name=message.text)
     elif point == 'note':
-        await state.update_data(note=['Файл служебной записки',
-                                      message.document.file_id])
+        await state.update_data(field_one=message.document.file_id)
     elif point == 'storage':
-        await state.update_data(storage=['Склад', message.text])
+        await state.update_data(field_two=message.text)
     elif point == 'excel':
-        await state.update_data(excel=['Excel файл', message.document.file_id])
+        await state.update_data(field_three=message.document.file_id)
     elif point == 'obj':
-        await state.update_data(obj=[const.WHICH_OBJECT, message.text])
+        await state.update_data(field_five=message.text)
     await get_data.send_data(message=message, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await message.answer(const.SURE,
@@ -145,7 +143,7 @@ async def edit(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(state=AddMat.edit)
 async def get_role(query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await state.update_data(role=['Роль', query.data])
+    await state.update_data(role=query.data)
     await get_data.send_data(query=query, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await query.message.answer(const.SURE,

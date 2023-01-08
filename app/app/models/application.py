@@ -44,7 +44,7 @@ class Application(Base):
         edit_view_job = "edit_view_job"  # добавление видов работ
         add_view_job = "add_view_job"  # добавление видов работ
         edit_subobject = "edit_subobject"  # редактирование подобъектов
-        editing_some_movement = "editing_some_movement"  # Редактирование некорректного перемещения
+        adjustment_invoice = 'adjustment_invoice'  # Корректировка оформленной накладной
         add_subobject = "add_subobject"  # добавление подобъектов
         add_material = "add_material"  # Добавление материалов на свободный остаток
         add_edo = "add_edo"  # Добавление объекта в ЭДО
@@ -65,6 +65,7 @@ class Application(Base):
         nullable=True
     )
     date = Column(DateTime, default=datetime.utcnow)
+    name = Column(String(300))
     role = Column(Enum(Role))
     application_status = Column(Enum(ApplicationStatus), default=ApplicationStatus.pending)
     request_answered = Column(Enum(RequestAnswered))
@@ -72,7 +73,7 @@ class Application(Base):
     field_one = Column(String(300))
     field_two = Column(String(300))
     field_three = Column(String(300))
-    field_four = Column(String(300))
+    field_four = Column(String(300), nullable=True)
     field_five = Column(String(300), nullable=True)
     field_six = Column(String(300), nullable=True)
     field_seven = Column(String(300), nullable=True)

@@ -40,7 +40,7 @@ class Middleware:
         self.app = app
 
     def __call__(self, environ, start_response):
-        scope.set(str(uuid4()))
+        scope.set(str(uuid4()))        
         try:
             return self.app(environ, start_response)
         except Exception as _exc:

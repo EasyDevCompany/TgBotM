@@ -10,12 +10,13 @@ from app.models.telegram_user import TelegramUser
 from app.models.application import Application
 from app.models.user import User
 
-from app.handlers import start
+from app.handlers import start, chat
 import app.handlers.forms.moderator as moderator
 import app.handlers.forms.administrator as administrator
 
 
 start.register_start_handler(dp=dp)
+chat.register_chat_handler(dp=dp)
 moderator.add_subobject.register(dp=dp)
 moderator.add_material.register(dp=dp)
 moderator.add_naming.register(dp=dp)
@@ -40,5 +41,5 @@ if __name__ == "__main__":
     container = Container()
     db = container.db()
     db.create_database()
-    container.wire(modules=[start])
+    container.wire(modules=[start, chat])
     executor.start_polling(dp, skip_updates=True, on_startup=on_startup(dispatcher=dp))

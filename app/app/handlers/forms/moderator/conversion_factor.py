@@ -8,7 +8,7 @@ from utils import const, get_data
 
 
 async def get_coef(message: types.Message, state: FSMContext):
-    await state.update_data(coef=['Наименование', message.text])
+    await state.update_data(field_one=message.text)
     await message.answer(
         'Укажите старую единицу измерения и новую'
         '(на которую необходимо поменять)',
@@ -17,7 +17,7 @@ async def get_coef(message: types.Message, state: FSMContext):
 
 
 async def get_old_new(message: types.Message, state: FSMContext):
-    await state.update_data(old_new=['Единицы измерения', message.text])
+    await state.update_data(field_two=message.text)
     await message.answer(
         'Укажите соотношение старой единицы измерения к новой)',
         reply_markup=kb.exit_kb())
@@ -25,8 +25,7 @@ async def get_old_new(message: types.Message, state: FSMContext):
 
 
 async def get_ratio(message: types.Message, state: FSMContext):
-    await state.update_data(ratio=['Соотношение единиц измерения',
-                                   message.text])
+    await state.update_data(field_three=message.text)
     await get_data.send_data(message=message, state=state)
     await message.answer(const.SURE,
                          reply_markup=kb.sure())
@@ -88,14 +87,13 @@ async def edit(message: types.Message, state: FSMContext):
     data = await state.get_data()
     point = data['change']
     if point == 'name':
-        await state.update_data(name=['ФИО', message.text])
+        await state.update_data(name=message.text)
     elif point == 'coef':
-        await state.update_data(coef=['Наименование', message.text])
+        await state.update_data(field_one=message.text)
     elif point == 'old_new':
-        await state.update_data(old_new=['Единицы измерения', message.text])
+        await state.update_data(field_two=message.text)
     elif point == 'ratio':
-        await state.update_data(ratio=['Соотношение единиц измерения',
-                                       message.text])
+        await state.update_data(field_three=message.text)
     await get_data.send_data(message=message, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await message.answer(const.SURE,
@@ -106,7 +104,7 @@ async def edit(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(state=AddCoef.edit)
 async def get_role(query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await state.update_data(role=['Роль', query.data])
+    await state.update_data(role=query.data)
     await get_data.send_data(query=query, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await query.message.answer(const.SURE,
