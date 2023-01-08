@@ -59,7 +59,6 @@ def choose_your_role():
     keyboard = InlineKeyboardMarkup(resize_keyboard=True)
     b1 = InlineKeyboardButton(text='Бухгалтер',
                               callback_data=Application.Role.accountant)
-
     b2 = InlineKeyboardButton(text='Кладовщик',
                               callback_data=Application.Role.storekeeper)
     b3 = InlineKeyboardButton(text='Супервайзер',

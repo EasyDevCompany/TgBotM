@@ -37,7 +37,7 @@ async def skip(query: types. CallbackQuery, state: FSMContext,
                            state=[AddNaming.add_several_naming,
                                   AddNaming.edit])
 async def skip(query: types. CallbackQuery, state: FSMContext):
-    await state.update_data(several_naming=[const.TABLE, None])
+    await state.update_data(field_six=None)
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     await get_data.send_data(query=query, state=state)
     new_kb = kb.sure().add(kb.exit_button)
@@ -334,25 +334,19 @@ async def edit(message: types.Message, state: FSMContext):
     data = await state.get_data()
     point = data['change']
     if point == 'name':
-        await state.update_data(name=['ФИО', message.text])
+        await state.update_data(name=message.text)
     elif point == 'section_material':
-        await state.update_data(section_material=['Раздел для материала',
-                                                  message.text])
+        await state.update_data(field_one=message.text)
     elif point == 'subsection_material':
-        await state.update_data(subsection_material=['Подраздел для материала',
-                                                     message.text])
+        await state.update_data(field_two=message.text)
     elif point == 'group_material':
-        await state.update_data(group_material=['Группа для материала',
-                                                message.text])
+        await state.update_data(field_three=message.text)
     elif point == 'name_material':
-        await state.update_data(name_material=['Наименование материала',
-                                               message.text])
+        await state.update_data(field_four=message.text)
     elif point == 'unit_of_measureament':
-        await state.update_data(unit_of_measureament=['Единица измерения',
-                                                      message.text])
+        await state.update_data(field_five=message.text)
     elif point == 'several_naming':
-        await state.update_data(several_naming=[const.TABLE,
-                                                message.document.file_id])
+        await state.update_data(field_six=message.document.file_id)
     await get_data.send_data(message=message, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await message.answer(const.SURE,
@@ -363,7 +357,7 @@ async def edit(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(state=AddNaming.edit)
 async def get_role(query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await state.update_data(role=['Роль', query.data])
+    await state.update_data(role=query.data)
     await get_data.send_data(query=query, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await query.message.answer(const.SURE,

@@ -9,7 +9,9 @@ from app.models.application import Application
 from app.services.application import ApplicationService
 
 from app.models.telegram_user import TelegramUser
+from app.models.application import Application
 from app.services.tg_user_service import TelegramUserService
+from app.services.application import ApplicationService
 
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
@@ -88,6 +90,7 @@ async def test_func(
     )
 
 
+
 @dp.callback_query_handler(text='exit', state='*')
 async def cancel(query: types. CallbackQuery, state: FSMContext):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
@@ -102,48 +105,35 @@ async def edit_data(query: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     if 'change' in data:
         del data['change']
+    elif 'message_id' in data:
+        del data['message_id']
     await query.message.answer('Выберите номер пункта для корректировки: ',
                                reply_markup=kb.genmarkup(data=data))
     await query.answer()
 
 
 @dp.callback_query_handler(text='send', state='*')
-async def send_ticket(query: types.CallbackQuery, state: FSMContext):
+@inject
+async def send_ticket(query: types.CallbackQuery,
+                      state: FSMContext,
+                      application: ApplicationService = Provide[Container.application_service]):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     data = await state.get_data()
-    if data['adm_or_tech'] == 'adm':
-        chat = settings.ADMIN_CHAT_ID
-    elif data['adm_or_tech'] == 'tech':
-        chat = settings.TECH_CHAT_ID
-    del data['adm_or_tech']
     if 'change' in data:
         del data['change']
-    message = ''
-    for v in data.values():
-        message += f'{v[0]}: {v[1]}\n'
-    if 'extra_file' in data:
-        if data['extra_file'][1] is not None:
-            try:
-                await bot.send_media_group(chat, data['extra_file'][1])
-            except:
-                await bot.send_document(chat, data['extra_file'][1],
-                                        caption=message,
-                                        reply_markup=kb.adm_kb())
-        await bot.send_document(chat, data['note'][1],
-                                caption=message, reply_markup=kb.adm_kb())
-    elif 'note' in data and 'excel' in data:
-        media = types.MediaGroup()
-        media.attach_document(data['note'][1])
-        media.attach_document(data['excel'][1])
-        await bot.send_media_group(chat, media=media)
-        await bot.send_message(chat, message, reply_markup=kb.adm_kb())
-    elif 'note' in data:
-        await bot.send_document(chat, data['note'][1],
-                                caption=message, reply_markup=kb.adm_kb())
-    else:
-        await bot.send_message(chat, message, reply_markup=kb.adm_kb())
+    if 'message_id' in data:
+        del data['message_id']
+    await application.create(
+        user_id=query.from_user.id,
+        obj_in=data
+    )
     await state.finish()
-    await query.message.answer(const.START_MESSAGE, reply_markup=kb.start_work)
+    await query.message.answer(
+        'Ваш запрос отправлен сотруднику, ожидайте ответа')
+    await query.message.answer(
+        const.START_MESSAGE,
+        reply_markup=kb.start_work
+    )
 
 
 @inject
@@ -189,7 +179,7 @@ async def get_name(message: types.Message, state: FSMContext):
 
 
 async def get_role(query: types.CallbackQuery, state: FSMContext):
-    await state.update_data(role=['Роль', query.data])
+    await state.update_data(role=query.data)
     new_kb = kb.main_kb().add(kb.exit_button)
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     await query.message.answer(R_TYPE,

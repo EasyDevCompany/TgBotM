@@ -32,6 +32,7 @@ class AddObj(BaseStates):
     sort = State()
     choise = State()
     subsystems = State()
+    subsystems_edit = State()
     sure = State()
     edit = State()
     edit_chapter = State()

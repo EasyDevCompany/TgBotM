@@ -117,7 +117,7 @@ async def edit(message: types.Message, state: FSMContext,
     data = await state.get_data()
     point = data['change']
     if point == 'name':
-        await state.update_data(name=['ФИО', message.text])
+        await state.update_data(name=message.text)
     elif point == 'note':
         await state.update_data(field_one=message.document.file_id)
     elif point == 'number':

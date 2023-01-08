@@ -115,19 +115,6 @@ async def correct(query: types.CallbackQuery, state: FSMContext):
         await query.message.answer(ACCESS,
                                    reply_markup=kb.exit_kb())
         await state.set_state(OpenAcs.edit)
-    # elif query.data == '7':
-    #     await bot.delete_message(
-    #         query.message.chat.id, query.message.message_id)
-    #     await state.update_data(change='staff_role')
-    #     storage_man_button = types.InlineKeyboardButton(
-    #         'Кладовщик центрального склада', callback_data='Кладовщик ЦС')
-    #     other_button = types.InlineKeyboardButton(
-    #         'Другое', callback_data='other_role')
-    #     new_kb = kb.choose_your_role().add(
-    #         storage_man_button).add(other_button).add(kb.exit_button)
-    #     await query.message.answer(
-    #         'Выберите роль сотрудника', reply_markup=new_kb)
-    #     await state.set_state(OpenAcs.staff_role_edit)
     elif query.data == '7':
         await bot.delete_message(
             query.message.chat.id, query.message.message_id)

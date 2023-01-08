@@ -150,7 +150,7 @@ async def edit(message: types.Message, state: FSMContext,
     data = await state.get_data()
     point = data['change']
     if point == 'name':
-        await state.update_data(name=['ФИО', message.text])
+        await state.update_data(name=message.text)
     elif point == 'section':
         await state.update_data(field_two=message.text)
     elif point == 'subobject_name':
@@ -255,6 +255,33 @@ async def get_subsystems_edit(query: types.CallbackQuery, state: FSMContext,
                                              'field_five': data['field_five']})
             await query.message.answer(const.CHANGE_SUCCESS)
             await state.finish()
+    await query.answer()
+
+
+@dp.callback_query_handler(state=AddObj.subsystems_edit)
+async def get_subsystems_edit(query: types.CallbackQuery, state: FSMContext):
+    new_kb = kb.accept().add(kb.exit_button)
+    data = await state.get_data()
+    if query.data != 'accept' and data['field_five'] == '':
+        await state.update_data(field_five=query.data)
+        data = await state.get_data()
+        msg = await query.message.answer(data['field_five'], reply_markup=new_kb)
+        await state.update_data(message_id=msg.message_id)
+    elif query.data != 'accept':
+        data = await state.get_data()
+        await state.update_data(field_five=data['field_five'] + ', ' + query.data)
+        new_data = await state.get_data()
+        await bot.edit_message_text(new_data['field_five'],
+                                    query.message.chat.id,
+                                    new_data['message_id'], reply_markup=new_kb)
+    else:
+        await bot.delete_message(
+            query.message.chat.id, query.message.message_id)
+        await get_data.send_data(query=query, state=state)
+        new_kb = kb.sure().add(kb.exit_button)
+        await query.message.answer(const.SURE,
+                                   reply_markup=new_kb)
+        await state.set_state(AddObj.sure)
     await query.answer()
 
 
