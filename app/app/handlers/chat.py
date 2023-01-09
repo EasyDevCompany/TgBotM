@@ -17,9 +17,12 @@ from app.core.container import Container
 @inject
 async def admin(message: types.Message,
                 application: ApplicationService = Provide[Container.application_service]):
-    tickets = await application.applications_for(
-        Application.RequestAnswered.admin)
-    await kb.admin_btns_tickets(message=message, tickets=tickets)
+    try:
+        tickets = await application.applications_for(
+            Application.RequestAnswered.admin)
+        await kb.admin_btns_tickets(message=message, tickets=tickets)
+    except:
+        await message.answer('Новых обновлений нет')
 
 
 @inject
@@ -38,6 +41,7 @@ async def comeback(query: types.CallbackQuery,
     user_id = int(re.search(r'(?<=12\)).*', query.message.text).group())
     logger.info(user_id)
     await state.update_data(number=int(number[0]), user_id=user_id)
+    await query.message.answer('Ведите комментарий: ')
     await state.set_state(Admin.comment)
 
 
