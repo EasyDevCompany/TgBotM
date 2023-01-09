@@ -3,26 +3,28 @@ import re
 import app.keyboards.inline_keyboard as kb
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
-from app.loader import bot, dp
+from app.loader import bot
 from app.states.base import BaseStates
 from app.states.tgbot_states import UpdateStorage
 from app.utils import const, get_data
+from app.utils.const import EDIT_NEW_STORAGE, REQUEST_NUMBER, EDIT_CONTACT_NAME, EDIT_ADDRESS, ERROR_CONTACT, \
+    ADDRESS_ERROR, FIO, ROLE, R_TYPE
 
 
 async def get_number_bid(message: types.Message, state: FSMContext):
     if not message.text.isalpha():
-        await state.update_data(number_bid=['Номер заявки', message.text])
-        await message.answer('Укажите новый склад доставки',
+        await state.update_data(field_one=message.text)
+        await message.answer(EDIT_NEW_STORAGE,
                              reply_markup=kb.exit_kb())
         await state.set_state(UpdateStorage.new_storage)
     else:
-        await message.answer('Пожалуйста, укажите номер заявки')
+        await message.answer(REQUEST_NUMBER)
         await state.set_state(UpdateStorage.number_bid)
 
 
 async def get_new_storage(message: types.Message, state: FSMContext):
-    await state.update_data(new_storage=['Новый склад', message.text])
-    await message.answer('Укажите контактное лицо (Ф.И.О.)',
+    await state.update_data(field_two=message.text)
+    await message.answer(EDIT_CONTACT_NAME,
                          reply_markup=kb.exit_kb())
     await state.set_state(UpdateStorage.contact_fio)
 
@@ -32,43 +34,42 @@ async def get_fio(message: types.Message, state: FSMContext):
             r'\b[\u0401\u0451\u0410-\u044f]+\s+[\u0401\u0451\u0410-\u044f]+\s+[\u0401\u0451\u0410-\u044f]+\b',
             message.text, re.IGNORECASE)
             ):
-        await state.update_data(new_storage=['Новый склад', message.text])
+        await state.update_data(field_three=message.text)
         await message.answer(
-            'Укажите адрес актуального склада (на который нужно поменять)',
+            EDIT_ADDRESS,
             reply_markup=kb.exit_kb())
         await state.set_state(UpdateStorage.address_storage)
     else:
         await state.set_state(UpdateStorage.contact_fio)
-        await message.answer('Введите пожалуйста фамилию, имя и отчество')
+        await message.answer(ERROR_CONTACT)
 
 
 async def get_address(message: types.Message, state: FSMContext):
     if not message.text.isdigit():
-        await state.update_data(address=['Адрес актуального склада', message.text])
+        await state.update_data(field_four=message.text)
         await get_data.send_data(message=message, state=state)
         new_kb = kb.sure().add(kb.exit_button)
         await message.answer(const.SURE,
                              reply_markup=new_kb)
         await state.set_state(UpdateStorage.sure)
     else:
-        await message.answer('Пожалуйста, укажите адрес актуального склада')
+        await message.answer(ADDRESS_ERROR)
         await state.set_state(UpdateStorage.address_storage)
 
 
-@dp.callback_query_handler(state=UpdateStorage.sure)
 async def correct(query: types.CallbackQuery, state: FSMContext):
     if query.data == '1':
         await bot.delete_message(
             query.message.chat.id, query.message.message_id)
         await state.update_data(change='name')
-        await query.message.answer('Введите ФИО', reply_markup=kb.exit_kb())
+        await query.message.answer(FIO, reply_markup=kb.exit_kb())
         await state.set_state(UpdateStorage.edit)
     elif query.data == '2':
         await bot.delete_message(
             query.message.chat.id, query.message.message_id)
         await state.update_data(change='role')
         new_kb = kb.choose_your_role().add(kb.exit_button)
-        await query.message.answer('Выберите свою роль',
+        await query.message.answer(ROLE,
                                    reply_markup=new_kb)
         await state.set_state(UpdateStorage.edit)
     elif query.data == '3':
@@ -76,7 +77,7 @@ async def correct(query: types.CallbackQuery, state: FSMContext):
             query.message.chat.id, query.message.message_id)
         await state.update_data(change='request_type')
         new_kb = kb.main_kb().add(kb.exit_button)
-        await query.message.answer('Выберите тип запроса',
+        await query.message.answer(R_TYPE,
                                    reply_markup=new_kb)
         await state.set_state(BaseStates.request_type)
     elif query.data == '4':
@@ -90,14 +91,14 @@ async def correct(query: types.CallbackQuery, state: FSMContext):
         await bot.delete_message(
             query.message.chat.id, query.message.message_id)
         await state.update_data(change='new_storage')
-        await query.message.answer('Укажите новый склад доставки',
+        await query.message.answer(EDIT_NEW_STORAGE,
                                    reply_markup=kb.exit_kb())
         await state.set_state(UpdateStorage.edit)
     elif query.data == '6':
         await bot.delete_message(
             query.message.chat.id, query.message.message_id)
         await state.update_data(change='contact_fio')
-        await query.message.answer('Укажите контактное лицо (Ф.И.О.)',
+        await query.message.answer(EDIT_CONTACT_NAME,
                                    reply_markup=kb.exit_kb())
         await state.set_state(UpdateStorage.edit)
     elif query.data == '7':
@@ -105,7 +106,7 @@ async def correct(query: types.CallbackQuery, state: FSMContext):
             query.message.chat.id, query.message.message_id)
         await state.update_data(change='address')
         await query.message.answer(
-            'Укажите адрес актуального склада (на который нужно поменять)',
+            EDIT_ADDRESS,
             reply_markup=kb.exit_kb())
         await state.set_state(UpdateStorage.edit)
     await query.answer()
@@ -115,16 +116,15 @@ async def edit(message: types.Message, state: FSMContext):
     data = await state.get_data()
     point = data['change']
     if point == 'name':
-        await state.update_data(name=['ФИО', message.text])
+        await state.update_data(name=message.text)
     elif point == 'number_bid':
-        await state.update_data(number_bid=['Номер заявки', message.text])
+        await state.update_data(field_one=message.text)
     elif point == 'new_storage':
-        await state.update_data(new_storage=['Новый склад', message.text])
+        await state.update_data(field_two=message.text)
     elif point == 'contact_fio':
-        await state.update_data(contact_fio=['Контактное лицо', message.text])
+        await state.update_data(field_three=message.text)
     elif point == 'address':
-        await state.update_data(address=['Адрес актуального склада',
-                                         message.text])
+        await state.update_data(field_four=message.text)
     new_kb = kb.sure().add(kb.exit_button)
     await get_data.send_data(message=message, state=state)
     await message.answer(const.SURE,
@@ -132,10 +132,9 @@ async def edit(message: types.Message, state: FSMContext):
     await state.set_state(UpdateStorage.sure)
 
 
-@dp.callback_query_handler(state=UpdateStorage.edit)
 async def get_role(query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await state.update_data(role=['Роль', query.data])
+    await state.update_data(role=query.data)
     new_kb = kb.sure().add(kb.exit_button)
     await get_data.send_data(query=query, state=state)
     await query.message.answer(const.SURE,

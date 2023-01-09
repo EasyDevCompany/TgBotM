@@ -1,80 +1,75 @@
 import app.keyboards.inline_keyboard as kb
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
-from app.loader import bot, dp
+from app.loader import bot
 from app.states.base import BaseStates
 from app.states.tgbot_states import AdjInv
 from app.utils import const, get_data
+from app.utils.const import EDIT_DOC_NUMBER, LOAD_DOC, REQUEST_NUMBER, WHAT_EDIT_IN_DOC, EDIT_INFO, FIO, ROLE, R_TYPE
 
 
 async def get_note(message: types.Message, state: FSMContext):
     if message.content_type == 'document':
-        await state.update_data(note=['Файл служебной записки',
-                                      message.document.file_id])
-        await message.answer('Укажите номер накладного документа',
+        await state.update_data(field_one=message.document.file_id)
+        await message.answer(EDIT_DOC_NUMBER,
                              reply_markup=kb.exit_kb())
         await state.set_state(AdjInv.number_invoice)
     else:
-        await message.answer('Пожалуйста, загрузите документ')
+        await message.answer(LOAD_DOC)
         await state.set_state(AdjInv.note)
 
 
 async def get_number_invoice(message: types.Message, state: FSMContext):
     if not message.text.isalpha():
-        await state.update_data(number_invoice=['Номер накладного документа',
-                                                message.text])
-        await message.answer('Укажите номер заявки',
+        await state.update_data(field_two=message.text)
+        await message.answer(REQUEST_NUMBER,
                              reply_markup=kb.exit_kb())
         await state.set_state(AdjInv.number_ticket)
     else:
-        await message.answer('Пожалуйста, укажите номер накладного документа')
+        await message.answer(EDIT_DOC_NUMBER)
         await state.set_state(AdjInv.number_invoice)
 
 
 async def get_number_ticket(message: types.Message, state: FSMContext):
     if not message.text.isalpha():
-        await state.update_data(number_ticket=['Номер заявки', message.text])
+        await state.update_data(field_three=message.text)
         new_kb = kb.adj_inv().add(kb.exit_button)
-        await message.answer('Выберите, что необходимо отредактировать в накладной',
+        await message.answer(WHAT_EDIT_IN_DOC,
                              reply_markup=new_kb)
         await state.set_state(AdjInv.what_edit)
     else:
-        await message.answer('Пожалуйста, укажите номер заявки')
+        await message.answer(REQUEST_NUMBER)
         await state.set_state(AdjInv.number_ticket)
 
 
-@dp.callback_query_handler(state=AdjInv.what_edit)
 async def get_what_edit(query: types.CallbackQuery, state: FSMContext):
-    await state.update_data(what_edit=['Необходимо отредактировать',
-                                       query.data])
-    await query.message.answer('Укажите уточняющую информацию',
+    await state.update_data(field_four=query.data)
+    await query.message.answer(EDIT_INFO,
                                reply_markup=kb.exit_kb())
     await state.set_state(AdjInv.description)
 
 
 async def get_description(message: types.Message, state: FSMContext):
-    await state.update_data(description=['Уточняющая информация',
-                                         message.text])
+    await state.update_data(field_five=message.text)
     new_kb = kb.sure().add(kb.exit_button)
     await get_data.send_data(message=message, state=state)
     await message.answer(const.SURE, reply_markup=new_kb)
     await state.set_state(AdjInv.sure)
 
 
-@dp.callback_query_handler(state=AdjInv.sure)
 async def correct(query: types.CallbackQuery, state: FSMContext):
     if query.data == '1':
         await bot.delete_message(
             query.message.chat.id, query.message.message_id)
         await state.update_data(change='name')
-        await query.message.answer('Введите ФИО', reply_markup=kb.exit_kb())
+        await query.message.answer(FIO, reply_markup=kb.exit_kb())
         await state.set_state(AdjInv.edit)
     elif query.data == '2':
         await bot.delete_message(
             query.message.chat.id, query.message.message_id)
         await state.update_data(change='role')
         new_kb = kb.choose_your_role().add(kb.exit_button)
-        await query.message.answer('Выберите свою роль',
+        await query.message.answer(ROLE,
                                    reply_markup=new_kb)
         await state.set_state(AdjInv.edit)
     elif query.data == '3':
@@ -82,7 +77,7 @@ async def correct(query: types.CallbackQuery, state: FSMContext):
             query.message.chat.id, query.message.message_id)
         await state.update_data(change='request_type')
         new_kb = kb.main_kb().add(kb.exit_button)
-        await query.message.answer('Выберите тип запроса',
+        await query.message.answer(R_TYPE,
                                    reply_markup=new_kb)
         await state.set_state(BaseStates.request_type)
     elif query.data == '4':
@@ -96,14 +91,14 @@ async def correct(query: types.CallbackQuery, state: FSMContext):
         await bot.delete_message(
             query.message.chat.id, query.message.message_id)
         await state.update_data(change='number_invoice')
-        await query.message.answer('Укажите номер накладного документа',
+        await query.message.answer(EDIT_DOC_NUMBER,
                                    reply_markup=kb.exit_kb())
         await state.set_state(AdjInv.edit)
     elif query.data == '6':
         await bot.delete_message(
             query.message.chat.id, query.message.message_id)
         await state.update_data(change='number_ticket')
-        await query.message.answer('Укажите номер заявки',
+        await query.message.answer(REQUEST_NUMBER,
                                    reply_markup=kb.exit_kb())
         await state.set_state(AdjInv.edit)
     elif query.data == '7':
@@ -111,14 +106,14 @@ async def correct(query: types.CallbackQuery, state: FSMContext):
             query.message.chat.id, query.message.message_id)
         await state.update_data(change='what_edit')
         await query.message.answer(
-            'Выберите, что необходимо отредактировать в накладной',
+            WHAT_EDIT_IN_DOC,
             reply_markup=kb.adj_inv())
         await state.set_state(AdjInv.what_edit_correct)
     elif query.data == '8':
         await bot.delete_message(
             query.message.chat.id, query.message.message_id)
         await state.update_data(change='description')
-        await query.message.answer('Укажите уточняющую информацию',
+        await query.message.answer(EDIT_INFO,
                                    reply_markup=kb.exit_kb())
         await state.set_state(AdjInv.edit)
     await query.answer()
@@ -128,18 +123,15 @@ async def edit(message: types.Message, state: FSMContext):
     data = await state.get_data()
     point = data['change']
     if point == 'name':
-        await state.update_data(name=['ФИО', message.text])
+        await state.update_data(name=message.text)
     elif point == 'note':
-        await state.update_data(note=['Файл служебной записки',
-                                      message.document.file_id])
+        await state.update_data(field_one=message.document.file_id)
     elif point == 'number_invoice':
-        await state.update_data(number_invoice=['Номер накладного документа',
-                                                message.text])
+        await state.update_data(field_two=message.text)
     elif point == 'number_ticket':
-        await state.update_data(number_ticket=['Номер заявки', message.text])
+        await state.update_data(field_three=message.text)
     elif point == 'description':
-        await state.update_data(description=['Уточняющая информация',
-                                             message.text])
+        await state.update_data(field_five=message.text)
     new_kb = kb.sure().add(kb.exit_button)
     await get_data.send_data(message=message, state=state)
     await message.answer(const.SURE,
@@ -147,10 +139,9 @@ async def edit(message: types.Message, state: FSMContext):
     await state.set_state(AdjInv.sure)
 
 
-@dp.callback_query_handler(state=AdjInv.edit)
 async def get_role(query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await state.update_data(role=['Роль', query.data])
+    await state.update_data(role=query.data)
     await get_data.send_data(query=query, state=state)
     new_kb = kb.sure().add(kb.exit_button)
     await query.message.answer(const.SURE,
@@ -158,10 +149,8 @@ async def get_role(query: types.CallbackQuery, state: FSMContext):
     await state.set_state(AdjInv.sure)
 
 
-@dp.callback_query_handler(state=AdjInv.what_edit_correct)
 async def get_what_edit_correct(query: types.CallbackQuery, state: FSMContext):
-    await state.update_data(what_edit=['Необходимо отредактировать',
-                                       query.data])
+    await state.update_data(field_four=query.data)
     new_kb = kb.sure().add(kb.exit_button)
     await get_data.send_data(query=query, state=state)
     await query.message.answer(const.SURE, reply_markup=new_kb)

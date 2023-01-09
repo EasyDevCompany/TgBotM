@@ -6,3 +6,6 @@ class BaseStates(StatesGroup):
     role = State()
     request_type = State()
 
+
+class Admin(StatesGroup):
+    comment = State()

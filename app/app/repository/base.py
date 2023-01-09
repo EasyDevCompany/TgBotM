@@ -12,7 +12,6 @@ class RepositoryBase(Generic[ModelType, ]):
     def create(
         self, obj_in, commit=False
     ) -> ModelType:
-        logger.info(f"{obj_in}")
         obj_in_data = dict(obj_in)
         db_obj = self._model(**obj_in_data)
         self._session.add(db_obj)

@@ -32,7 +32,7 @@ if __name__ == "__main__":
         login=login,
         password=password,
         active=True,
-        role=User.UsersRoles.admin
+        role=User.UsersRoles.super_user
     )
     session.session.add(user)
     session.session.commit()

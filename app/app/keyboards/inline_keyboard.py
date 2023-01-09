@@ -1,5 +1,7 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from app.utils import const_add_subobjects as const
+from app.models.application import Application
+from telegram_bot_pagination import InlineKeyboardPaginator
 
 start_work = InlineKeyboardMarkup().add(
     InlineKeyboardButton(
@@ -29,28 +31,33 @@ def genmarkup(data):
 
 def choose_your_role():
     keyboard = InlineKeyboardMarkup(resize_keyboard=True)
-    b1 = InlineKeyboardButton(text='Бухгалтер', callback_data='Бухгалтер')
-    b2 = InlineKeyboardButton(text='Кладовщик', callback_data='Кладовщик')
-    b3 = InlineKeyboardButton(text='Супервайзер', callback_data='Супервайзер')
-    b4 = InlineKeyboardButton(text='Прораб', callback_data='Прораб')
+    b1 = InlineKeyboardButton(text='Бухгалтер',
+                              callback_data=Application.Role.accountant)
+    b2 = InlineKeyboardButton(text='Кладовщик',
+                              callback_data=Application.Role.storekeeper)
+    b3 = InlineKeyboardButton(text='Супервайзер',
+                              callback_data=Application.Role.supervisor)
+    b4 = InlineKeyboardButton(text='Прораб',
+                              callback_data=Application.Role.foreman)
     b5 = InlineKeyboardButton(text='Начальник Участка',
-                              callback_data='Начальник Участка')
-    b6 = InlineKeyboardButton(text='Куратор', callback_data='Куратор')
+                              callback_data=Application.Role.section_chief)
+    b6 = InlineKeyboardButton(text='Куратор',
+                              callback_data=Application.Role.curator)
     b7 = InlineKeyboardButton(text='Начальник Отдела',
-                              callback_data='Начальник Отдела')
+                              callback_data=Application.Role.department_head)
     b8 = InlineKeyboardButton(text='Начальник управления ДИК',
-                              callback_data='Начальник управления ДИК')
+                              callback_data=Application.Role.head_of_dec_department)
     b9 = InlineKeyboardButton(text='Сотрудник снабжения',
-                              callback_data='Сотрудник снабжения')
+                              callback_data=Application.Role.supply_officer)
     b10 = InlineKeyboardButton(text='Сотрудник ПТО',
-                               callback_data='Сотрудник ПТО')
+                               callback_data=Application.Role.supply_pto)
     b11 = InlineKeyboardButton(text='Утверждающий счета',
-                               callback_data='Утверждающий счета')
+                               callback_data=Application.Role.account_approve)
     b12 = InlineKeyboardButton(text='Руководитель проекта',
-                               callback_data='Руководитель проекта')
+                               callback_data=Application.Role.project_manager)
     b13 = InlineKeyboardButton(
         text='Начальник Административно-Хозяйственного управления',
-        callback_data='Начальник АХУ')
+        callback_data=Application.Role.head_of_the_administrative_and_economic_department)
     keyboard.row(b1, b2)
     keyboard.row(b3, b4)
     keyboard.row(b5, b6)
@@ -377,21 +384,39 @@ def adj_inv():
     return keyboard
 
 
-def adm_kb():
-    keyboard = InlineKeyboardMarkup(resize_keyboard=True)
-    b1 = InlineKeyboardButton(
-        text='Взять в работу', callback_data='get'
-    )
-    b2 = InlineKeyboardButton(
-        text='Вернуть сотруднику для корректировки запроса',
-        callback_data='comeback'
-    )
-    b3 = InlineKeyboardButton(
-        text='Запрос обработан',
-        callback_data='done'
-    )
-    keyboard.row(b1)
-    keyboard.row(b2)
-    keyboard.row(b3)
-    return keyboard
+class MyPaginator(InlineKeyboardPaginator):
+    first_page_label = '<<'
+    previous_page_label = '<'
+    current_page_label = '-{}-'
+    next_page_label = '>'
+    last_page_label = '>>'
+
+
+async def admin_btns_tickets(message, tickets, page=1):
+    kb = MyPaginator(len(tickets),
+                     current_page=page,
+                     data_pattern='ticket#{page}')
+    kb.add_before(
+        InlineKeyboardButton(text='Взять в работу',
+                             callback_data='take_to_work'))
+    kb.add_before(InlineKeyboardButton(
+            text='Вернуть сотруднику для корректировки запроса',
+            callback_data='comeback'))
+    kb.add_before(InlineKeyboardButton(text='Запрос обработан',
+                                       callback_data='done'))
+    await message.answer((f'А{tickets[page-1].id}\n'
+                          f'1) {tickets[page-1].name}\n'
+                          f'2) {tickets[page-1].role}\n'
+                          f'3) {tickets[page-1].request_type}\n'
+                          f'3) {tickets[page-1].field_one}\n'
+                          f'4) {tickets[page-1].field_two}\n'
+                          f'5) {tickets[page-1].field_three}\n'
+                          f'6) {tickets[page-1].field_four}\n'
+                          f'7) {tickets[page-1].field_five}\n'
+                          f'8) {tickets[page-1].field_six}\n'
+                          f'9) {tickets[page-1].field_seven}\n'
+                          f'10) {tickets[page-1].field_eight}\n'
+                          f'11) {tickets[page-1].field_nine}\n'
+                          f'12) {tickets[page-1].user.user_id}'
+                          ), reply_markup=kb.markup)
 

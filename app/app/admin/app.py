@@ -78,7 +78,9 @@ def login():
         ).first()
         logger.info(f"{user}")
         if user.is_active:
+            logger.info("go to login")
             login_user(user)
+        logger.info("redirected")
         return redirect('/admin')
     else:
         return render_template('index.html')

@@ -14,6 +14,7 @@ import handlers.forms.moderator as moderator
 import handlers.forms.administrator as administrator
 
 start.register_start_handler(dp=dp)
+chat.register_chat_handler(dp=dp)
 moderator.add_subobject.register(dp=dp)
 moderator.add_material.register(dp=dp)
 moderator.add_naming.register(dp=dp)
@@ -30,7 +31,6 @@ administrator.edit_some_moving.register(dp=dp)
 administrator.adjustment_of_supplies.register(dp=dp)
 
 
-
 def on_startup(dispatcher: Dispatcher):
     middlewares.setup(dp=dispatcher)
 
@@ -39,5 +39,5 @@ if __name__ == "__main__":
     container = Container()
     db = container.db()
     db.create_database()
-    container.wire(modules=[start])
+    container.wire(modules=[start, chat])
     executor.start_polling(dp, skip_updates=True, on_startup=on_startup(dispatcher=dp))

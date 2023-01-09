@@ -37,6 +37,7 @@ class AddObj(BaseStates):
     sure = State()
     edit = State()
     edit_chapter = State()
+    subsystems_edit = State()
 
 
 class AddMat(BaseStates):
@@ -153,6 +154,7 @@ class EditViewWork(BaseStates):
     edit_sub_systems = State()
     sure = State()
     edit = State()
+    subsystems_edit = State()
 
 
 class AddViewWork(BaseStates):
@@ -162,3 +164,5 @@ class AddViewWork(BaseStates):
     subsystems = State()
     sure = State()
     edit = State()
+    subsystems_edit = State()
+

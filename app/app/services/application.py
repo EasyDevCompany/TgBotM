@@ -16,9 +16,8 @@ class ApplicationService:
 
     async def create(self, obj_in: dict, user_id: int):
         user = self._repository_telegram_user.get(user_id=user_id)
-        obj_in["user_id"] = user.id
-        obj_in["user"] = user
-        logger.info(obj_in)
+        obj_in['user_id'] = user.id
+        obj_in['user'] = user
         return self._repository_application.create(
             obj_in=obj_in,
             commit=True
@@ -37,3 +36,7 @@ class ApplicationService:
             db_obj=self._repository_application.get(id=application_id),
             obj_in=obj_in
         )
+
+    async def delete(self, application_id: int):
+        db_obj = self._repository_application.get(id=application_id)
+        return self._repository_application.delete(db_obj=db_obj)
