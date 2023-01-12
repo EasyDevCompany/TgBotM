@@ -102,7 +102,6 @@ async def get_another_changes(message: types.Message, state: FSMContext,
             new_kb = kb.sure().add(kb.exit_button)
             await message.answer(const.SURE, reply_markup=new_kb)
             await state.set_state(EditShpmnt.sure)
-
     else:
         await application.update(data['admin'], obj_in={'application_status': Application.ApplicationStatus.in_work,
                                                         'field_five': message.text})

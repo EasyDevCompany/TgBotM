@@ -11,7 +11,6 @@ from app.services.application import ApplicationService
 from app.core.container import Container
 from app.models.application import Application
 
-
 async def get_note(message: types.Message, state: FSMContext):
     if message.content_type == 'document':
         await state.update_data(field_one=message.document.file_id)

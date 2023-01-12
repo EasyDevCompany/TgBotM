@@ -55,6 +55,14 @@ def genmarkup(data):
     return keyboard
 
 
+def another_genmarkup(count):
+    keyboard = InlineKeyboardMarkup()
+    keyboard.row_width = 1
+    for i in range(1, count+1):
+        keyboard.add(InlineKeyboardButton(i, callback_data=i))
+    return keyboard
+
+
 def choose_your_role():
     keyboard = InlineKeyboardMarkup(resize_keyboard=True)
     b1 = InlineKeyboardButton(text='Бухгалтер',

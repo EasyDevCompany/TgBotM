@@ -259,7 +259,9 @@ async def get_subsystems_edit(query: types.CallbackQuery, state: FSMContext,
 
 
 @dp.callback_query_handler(state=AddObj.subsystems_edit)
-async def get_subsystems_edit(query: types.CallbackQuery, state: FSMContext):
+@inject
+async def get_subsystems_edit(query: types.CallbackQuery, state: FSMContext,
+                              application: ApplicationService = Provide[Container.application_service]):
     new_kb = kb.accept().add(kb.exit_button)
     data = await state.get_data()
     if query.data != 'accept' and data['field_five'] == '':
@@ -275,13 +277,20 @@ async def get_subsystems_edit(query: types.CallbackQuery, state: FSMContext):
                                     query.message.chat.id,
                                     new_data['message_id'], reply_markup=new_kb)
     else:
-        await bot.delete_message(
-            query.message.chat.id, query.message.message_id)
-        await get_data.send_data(query=query, state=state)
-        new_kb = kb.sure().add(kb.exit_button)
-        await query.message.answer(const.SURE,
-                                   reply_markup=new_kb)
-        await state.set_state(AddObj.sure)
+        data = await state.get_data()
+        if 'admin' not in data:
+            await bot.delete_message(
+                query.message.chat.id, query.message.message_id)
+            await get_data.send_data(query=query, state=state)
+            new_kb = kb.sure().add(kb.exit_button)
+            await query.message.answer(const.SURE, reply_markup=new_kb)
+            await state.set_state(AddObj.sure)
+        else:
+            await application.update(data['admin'],
+                                     obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                             'field_five': data['field_five']})
+            await query.message.answer(const.CHANGE_SUCCESS)
+            await state.finish()
     await query.answer()
 
 
