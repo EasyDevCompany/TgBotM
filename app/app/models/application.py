@@ -58,10 +58,14 @@ class Application(Base):
         return_application = "return_application"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(
+    sender_user_id = Column(
         Integer,
         ForeignKey("telegramuser.id"),
-        index=True,
+        nullable=True
+    )
+    recipient_user_id = Column(
+        Integer,
+        ForeignKey("telegramuser.id"),
         nullable=True
     )
     date = Column(DateTime, default=datetime.utcnow)
@@ -78,7 +82,8 @@ class Application(Base):
     field_seven = Column(String(300), nullable=True)
     field_eight = Column(String(300), nullable=True)
     field_nine = Column(String(300), nullable=True)
-    user = relationship("TelegramUser")
+    sender_user = relationship('TelegramUser', foreign_keys=[sender_user_id])
+    recipient_user = relationship("TelegramUser", foreign_keys=[recipient_user_id])
 
-    def repr(self) -> str:
+    def __repr__(self) -> str:
         return f"{self.role}"
