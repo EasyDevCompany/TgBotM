@@ -1,6 +1,7 @@
 from app.repository.telegarm_user import RepositoryTelegramUser
 from app.repository.application import ApplicationRepository
 from app.models.application import Application
+from logger import logger
 
 
 class ApplicationService:
@@ -15,8 +16,9 @@ class ApplicationService:
 
     async def create(self, obj_in: dict, user_id: int):
         user = self._repository_telegram_user.get(user_id=user_id)
-        obj_in['user_id'] = user.id
-        obj_in['user'] = user
+        obj_in['sender_user_id'] = user.id
+        obj_in['sender_user'] = user
+        logger.info(obj_in)
         return self._repository_application.create(
             obj_in=obj_in,
             commit=True
@@ -30,12 +32,18 @@ class ApplicationService:
             request_answered=roles
         )
 
-    async def update(self, application_id: int, obj_in: dict):
+    async def update(self, application_id: int, obj_in: dict, user_id: int = None):
+        if user_id is not None:
+            user = self._repository_telegram_user.get(user_id=user_id)
+            obj_in['recipient_user_id'] = user.id
+            obj_in['recipient_user'] = user
         return self._repository_application.update(
             db_obj=self._repository_application.get(id=application_id),
-            obj_in=obj_in
+            obj_in=obj_in,
+            commit=True
         )
 
     async def delete(self, application_id: int):
         db_obj = self._repository_application.get(id=application_id)
-        return self._repository_application.delete(db_obj=db_obj)
+        return self._repository_application.delete(db_obj=db_obj,
+                                                   commit=True)

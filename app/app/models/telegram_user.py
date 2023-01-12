@@ -11,6 +11,10 @@ from sqlalchemy import (
     DateTime
 )
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+
+from .application import Application
+
 
 
 class TelegramUser(Base):

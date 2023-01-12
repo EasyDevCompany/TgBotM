@@ -139,6 +139,7 @@ class EditViewWork(BaseStates):
     edit_type_work = State()
     edit_sort = State()
     edit_sub_systems = State()
+    subsystems_edit = State()
     sure = State()
     edit = State()
 
@@ -148,5 +149,6 @@ class AddViewWork(BaseStates):
     type_work = State()
     sort = State()
     subsystems = State()
+    subsystems_edit = State()
     sure = State()
     edit = State()

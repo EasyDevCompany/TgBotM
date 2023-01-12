@@ -2,6 +2,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from utils import const_add_subobjects as const
 from app.models.application import Application
 from telegram_bot_pagination import InlineKeyboardPaginator
+from aiogram.utils.callback_data import CallbackData
 
 
 start_work = InlineKeyboardMarkup().add(
@@ -20,6 +21,14 @@ def genmarkup(data):
     keyboard = InlineKeyboardMarkup()
     keyboard.row_width = 1
     for i in range(1, len(data)):
+        keyboard.add(InlineKeyboardButton(i, callback_data=i))
+    return keyboard
+
+
+def another_genmarkup(count):
+    keyboard = InlineKeyboardMarkup()
+    keyboard.row_width = 1
+    for i in range(1, count+1):
         keyboard.add(InlineKeyboardButton(i, callback_data=i))
     return keyboard
 
@@ -387,30 +396,104 @@ class MyPaginator(InlineKeyboardPaginator):
     last_page_label = '>>'
 
 
+cb_admin = CallbackData("admin", "action", "id", "user_id")
+
+
 async def admin_btns_tickets(message, tickets, page=1):
     kb = MyPaginator(len(tickets),
                      current_page=page,
                      data_pattern='ticket#{page}')
     kb.add_before(
         InlineKeyboardButton(text='Взять в работу',
-                             callback_data='take_to_work'))
+                             callback_data=cb_admin.new(
+                                 action='take_to_work',
+                                 id=f'{tickets[page-1].id}',
+                                 user_id=f'{tickets[page-1].sender_user.user_id}'
+                             )))
     kb.add_before(InlineKeyboardButton(
             text='Вернуть сотруднику для корректировки запроса',
-            callback_data='comeback'))
-    kb.add_before(InlineKeyboardButton(text='Запрос обработан',
-                                       callback_data='done'))
-    await message.answer((f'А{tickets[page-1].id}\n'
-                          f'1) {tickets[page-1].name}\n'
-                          f'2) {tickets[page-1].role}\n'
-                          f'3) {tickets[page-1].request_type}\n'
-                          f'3) {tickets[page-1].field_one}\n'
-                          f'4) {tickets[page-1].field_two}\n'
-                          f'5) {tickets[page-1].field_three}\n'
-                          f'6) {tickets[page-1].field_four}\n'
-                          f'7) {tickets[page-1].field_five}\n'
-                          f'8) {tickets[page-1].field_six}\n'
-                          f'9) {tickets[page-1].field_seven}\n'
-                          f'10) {tickets[page-1].field_eight}\n'
-                          f'11) {tickets[page-1].field_nine}\n'
-                          f'12) {tickets[page-1].user.user_id}'
-                          ), reply_markup=kb.markup)
+            callback_data=cb_admin.new(
+                action='comeback',
+                id=f'{tickets[page-1].id}',
+                user_id=f'{tickets[page-1].sender_user.user_id}')))
+    kb.add_before(InlineKeyboardButton(
+        text='Запрос обработан',
+        callback_data=cb_admin.new(action='success',
+                                   id=f'{tickets[page-1].id}',
+                                   user_id=f'{tickets[page-1].sender_user.user_id}')))
+    msg = ''
+    msg += f'1){tickets[page-1].name}\n'
+    msg += f'2){tickets[page-1].role}\n'
+    msg += f'3){tickets[page-1].request_type}\n'
+    msg += f'4){tickets[page-1].field_one}\n'
+    msg += f'5){tickets[page-1].field_two}\n'
+    if tickets[page-1].field_three is not None:
+        msg += f'6){tickets[page-1].field_three}\n'
+    if tickets[page-1].field_four is not None:
+        msg += f'7){tickets[page-1].field_four}\n'
+    if tickets[page-1].field_five is not None:
+        msg += f'8){tickets[page-1].field_five}\n'
+    if tickets[page-1].field_six is not None:
+        msg += f'9){tickets[page-1].field_six}\n'
+    if tickets[page-1].field_seven is not None:
+        msg += f'10){tickets[page-1].field_seven}\n'
+    if tickets[page-1].field_eight is not None:
+        msg += f'11){tickets[page-1].field_eight}\n'
+    if tickets[page-1].field_nine is not None:
+        msg += f'12){tickets[page-1].field_nine}\n'
+    await message.answer(msg, reply_markup=kb.markup)
+
+
+async def moder_btns_tickets(message, tickets, page=1):
+    kb = MyPaginator(len(tickets),
+                     current_page=page,
+                     data_pattern='moderticket#{page}')
+    kb.add_before(
+        InlineKeyboardButton(text='Взять в работу',
+                             callback_data=cb_admin.new(
+                                 action='take_to_work',
+                                 id=f'{tickets[page-1].id}',
+                                 user_id=f'{tickets[page-1].sender_user.user_id}'
+                             )))
+    kb.add_before(InlineKeyboardButton(
+            text='Вернуть сотруднику для корректировки запроса',
+            callback_data=cb_admin.new(
+                action='comeback',
+                id=f'{tickets[page-1].id}',
+                user_id=f'{tickets[page-1].sender_user.user_id}')))
+    kb.add_before(InlineKeyboardButton(
+        text='Запрос обработан',
+        callback_data=cb_admin.new(action='success',
+                                   id=f'{tickets[page-1].id}',
+                                   user_id=f'{tickets[page-1].sender_user.user_id}')))
+    msg = ''
+    msg += f'1){tickets[page-1].name}\n'
+    msg += f'2){tickets[page-1].role}\n'
+    msg += f'3){tickets[page-1].request_type}\n'
+    msg += f'4){tickets[page-1].field_one}\n'
+    msg += f'5){tickets[page-1].field_two}\n'
+    msg += f'6){tickets[page-1].field_three}\n'
+    if tickets[page-1].field_four is not None:
+        msg += f'7){tickets[page-1].field_four}\n'
+    if tickets[page-1].field_five is not None:
+        msg += f'8){tickets[page-1].field_five}\n'
+    if tickets[page-1].field_six is not None:
+        msg += f'9){tickets[page-1].field_six}\n'
+    if tickets[page-1].field_seven is not None:
+        msg += f'10){tickets[page-1].field_seven}\n'
+    if tickets[page-1].field_eight is not None:
+        msg += f'11){tickets[page-1].field_eight}\n'
+    if tickets[page-1].field_nine is not None:
+        msg += f'12){tickets[page-1].field_nine}\n'
+    await message.answer(msg, reply_markup=kb.markup)
+
+
+def user_edit(ticket):
+    kb = InlineKeyboardMarkup()
+    button = InlineKeyboardButton(text='Редактировать',
+                                  callback_data=cb_admin.new(
+                                      action='edit',
+                                      id=ticket.id,
+                                      user_id=ticket.sender_user_id))
+    kb.row(button)
+    return kb

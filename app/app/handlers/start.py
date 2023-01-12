@@ -209,7 +209,7 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
         await state.set_state(my_states.OpenAcs.note)
     elif query.data == 'edit_incorrect_move_admin':
         await state.update_data(
-            request_type=Application.RequestType.editing_some_movement)
+            request_type=Application.RequestType.edit_some_moving)
         await state.update_data(
             request_answered=Application.RequestAnswered.admin)
         await query.message.answer(const.EDIT_MOV)

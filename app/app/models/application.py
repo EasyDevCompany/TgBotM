@@ -39,7 +39,7 @@ class Application(Base):
     class RequestType(str, enum.Enum):
         change_status_application = "change_status_application"  # смена статуса заявки
         conversion_factor = "conversion_factor"  # добавление коэффицента пересчета
-        warehouse_adjustments = "warehouse adjustments"  # корректировки склада в заявке
+        warehouse_adjustments = "warehouse_adjustments"  # корректировки склада в заявке
         add_naming = "add_naming"  # добавление наименований
         edit_view_job = "edit_view_job"  # добавление видов работ
         add_view_job = "add_view_job"  # добавление видов работ
@@ -54,14 +54,19 @@ class Application(Base):
 
     class ApplicationStatus(str, enum.Enum):
         pending = "pending"
+        in_work = "in_work"
         success = "success"
         return_application = "return_application"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(
+    sender_user_id = Column(
         Integer,
         ForeignKey("telegramuser.id"),
-        index=True,
+        nullable=True
+    )
+    recipient_user_id = Column(
+        Integer,
+        ForeignKey("telegramuser.id"),
         nullable=True
     )
     date = Column(DateTime, default=datetime.utcnow)
@@ -73,13 +78,14 @@ class Application(Base):
     field_one = Column(String(300))
     field_two = Column(String(300))
     field_three = Column(String(300))
-    field_four = Column(String(300), nullable=True)
+    field_four = Column(String(300))
     field_five = Column(String(300), nullable=True)
     field_six = Column(String(300), nullable=True)
     field_seven = Column(String(300), nullable=True)
     field_eight = Column(String(300), nullable=True)
     field_nine = Column(String(300), nullable=True)
-    user = relationship("TelegramUser")
+    sender_user = relationship('TelegramUser', foreign_keys=[sender_user_id])
+    recipient_user = relationship("TelegramUser", foreign_keys=[recipient_user_id])
 
     def repr(self) -> str:
         return f"{self.role}"
