@@ -42,6 +42,7 @@ class RepositoryBase(Generic[ModelType, ]):
                 setattr(db_obj, field, update_data[field])
         self._session.add(db_obj)
         self._session.flush()
+        self._session.commit()
         return db_obj
 
     def delete(self, *args, db_obj: Optional[ModelType], **kwargs) -> ModelType:

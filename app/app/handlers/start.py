@@ -2,7 +2,7 @@ from dependency_injector.wiring import inject, Provide
 
 from app.core.container import Container
 
-from app.models.telegram_user import TelegramUser
+from app.models.telegram_user import UserType
 from app.models.application import Application
 from app.services.tg_user_service import TelegramUserService
 from app.services.application import ApplicationService
@@ -26,7 +26,7 @@ async def start(
             "username": message.from_user.username,
             "first_name": message.from_user.first_name,
             "last_name": message.from_user.last_name,
-            "user_type": TelegramUser.UserType.employee
+            "user_type": UserType.employee
         }
     )
     await message.answer(

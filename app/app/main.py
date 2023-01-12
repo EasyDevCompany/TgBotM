@@ -11,8 +11,10 @@ from app.models.application import Application
 from app.models.user import User
 
 from app.handlers import start
+from app.handlers import chat
 
 start.register_start_handler(dp=dp)
+chat.register_chat_handler(dp=dp)
 
 
 def on_startup(dispatcher: Dispatcher):
@@ -23,5 +25,5 @@ if __name__ == "__main__":
     container = Container()
     db = container.db()
     db.create_database()
-    container.wire(modules=[start])
+    container.wire(modules=[start, chat])
     executor.start_polling(dp, skip_updates=True, on_startup=on_startup(dispatcher=dp))

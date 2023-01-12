@@ -1,5 +1,6 @@
 from app.repository.telegarm_user import RepositoryTelegramUser
 from typing import Any
+from app.models.telegram_user import TelegramUser
 
 
 class TelegramUserService:
@@ -16,3 +17,8 @@ class TelegramUserService:
 
         return self._repository_telegram_user.get(user_id=obj_in)
 
+    async def user_permission(self, user_id: int) -> bool:
+        user = self._repository_telegram_user.check_permission(user_id=user_id)
+        if user is None:
+            return False
+        return True

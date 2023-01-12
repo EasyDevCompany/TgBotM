@@ -11,6 +11,7 @@ from sqlalchemy import (
     ForeignKey
 )
 from sqlalchemy.orm import relationship
+from app.models.telegram_user import UserType
 
 
 class Application(Base):
@@ -31,10 +32,6 @@ class Application(Base):
         project_manager = "project_manager"  # Руководитель оотдела
         head_of_the_administrative_and_economic_department = "head_of_the_administrative_and_economic_department"
         # ачальник Административно Хозяйственного управления
-
-    class RequestAnswered(str, enum.Enum):
-        admin = "administrator"
-        moderator = "moderator"
 
     class RequestType(str, enum.Enum):
         change_status_application = "change_status_application"  # смена статуса заявки
@@ -71,7 +68,7 @@ class Application(Base):
     date = Column(DateTime, default=datetime.utcnow)
     role = Column(Enum(Role))
     application_status = Column(Enum(ApplicationStatus), default=ApplicationStatus.pending)
-    request_answered = Column(Enum(RequestAnswered))
+    request_answered = Column(Enum(UserType))
     request_type = Column(Enum(RequestType))
     field_one = Column(String(300))
     field_two = Column(String(300))

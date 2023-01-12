@@ -67,17 +67,13 @@ def login():
     if request.method == 'POST':
         login = request.form.get('login')
         password = request.form.get('password')
-        logger.info(f"{login}")
-        logger.info(f"{password}")
         user = session.session.query(User).filter(
             User.password == password,
             User.login == login
         ).first()
-        logger.info(f"{user}")
         if user.is_active:
             logger.info("go to login")
             login_user(user)
-        logger.info("redirected")
         return redirect('/admin')
     else:
         return render_template('index.html')
