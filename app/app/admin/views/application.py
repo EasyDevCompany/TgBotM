@@ -3,6 +3,7 @@ from app.models.user import User
 from flask_login import current_user
 from app.models.application import Application
 
+
 class ApplicationView(CustomModelView):
     page_size = 30
     can_view_details = True

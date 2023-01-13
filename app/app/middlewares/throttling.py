@@ -38,7 +38,7 @@ class ThrottlingMiddleware(BaseMiddleware):
             key = f"{self._prefix}_message"
         delta = throttled.rate - throttled.delta
         if throttled.exceeded_count == 2:
-            await message.reply('Слишком ного сообщений боту, сбавьте темп!')
+            await message.reply('Слишком  много сообщений боту, сбавьте темп!')
         if throttled.exceeded_count == 3:
             await message.reply('Ответ заблокирован, подождите 10 секунд.')
         await asyncio.sleep(delta)

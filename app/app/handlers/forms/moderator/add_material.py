@@ -40,23 +40,25 @@ async def get_excel(message: types.Message, state: FSMContext):
 async def get_choise(query: types.CallbackQuery, state: FSMContext):
     await state.update_data(field_four=query.data)
     await bot.delete_message(query.message.chat.id, query.message.message_id)
-    if query.data == 'reserve':
+    if query.data == 'Резервировать':
         await query.message.answer(RESERVE,
                                    reply_markup=kb.exit_kb())
         await state.set_state(AddMat.obj)
-    elif query.data == 'leave':
+    elif query.data == 'Оставить на своб. остатках':
         await state.update_data(field_five=None)
         await get_data.send_data(query=query, state=state)
+        new_kb = kb.sure().add(kb.exit_button)
         await query.message.answer(const.SURE,
-                                   reply_markup=kb.sure())
+                                   reply_markup=new_kb)
         await state.set_state(AddMat.sure)
 
 
 async def get_obj(message: types.Message, state: FSMContext):
     await state.update_data(field_five=message.text)
     await get_data.send_data(message=message, state=state)
+    new_kb = kb.sure().add(kb.exit_button)
     await message.answer(const.SURE,
-                         reply_markup=kb.sure())
+                         reply_markup=new_kb)
     await state.set_state(AddMat.sure)
 
 

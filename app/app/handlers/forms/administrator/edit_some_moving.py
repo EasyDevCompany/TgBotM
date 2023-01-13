@@ -91,8 +91,9 @@ async def get_another_reason(message: types.Message, state: FSMContext):
 async def get_description(message: types.Message, state: FSMContext):
     await state.update_data(field_eight=message.text)
     await get_data.send_data(message=message, state=state)
+    new_kb = kb.sure().add(kb.exit_button)
     await message.answer(const.SURE,
-                         reply_markup=kb.sure())
+                         reply_markup=new_kb)
     await state.set_state(EditMoveAdm.sure)
 
 

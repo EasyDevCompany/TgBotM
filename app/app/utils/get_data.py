@@ -7,7 +7,7 @@ async def send_data(state, query=None, message=None):
     msg = ''
     list_of_val = []
     for i in data.values():
-        if i != 'moderator' and i != 'admin':
+        if i != 'moderator' and i != 'admin' and i is not None:
             list_of_val.append(i)
     for i, v in enumerate(list_of_val):
         msg += f'{i + 1}: {v}\n'

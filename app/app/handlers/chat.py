@@ -59,3 +59,4 @@ def register_chat_handler(dp: Dispatcher):
     dp.register_message_handler(get_comment, state=Admin.comment)
     dp.register_callback_query_handler(comeback, text='comeback')
     dp.register_callback_query_handler(characters_page_callback, lambda call: call.data.split('#')[0]=='ticket')
+    

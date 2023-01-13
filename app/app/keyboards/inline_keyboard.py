@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from app.utils import const_add_subobjects as const
 from app.models.application import Application
@@ -33,6 +35,7 @@ def choose_your_role():
     keyboard = InlineKeyboardMarkup(resize_keyboard=True)
     b1 = InlineKeyboardButton(text='Бухгалтер',
                               callback_data=Application.Role.accountant)
+
     b2 = InlineKeyboardButton(text='Кладовщик',
                               callback_data=Application.Role.storekeeper)
     b3 = InlineKeyboardButton(text='Супервайзер',
@@ -131,34 +134,34 @@ def add_subobjects_kb():
     keyboard = InlineKeyboardMarkup(resize_keyboard=True)
     b1 = InlineKeyboardButton(
         text=const.CHAPTERS['prepare'],
-        callback_data='prepare')
+        callback_data='Подготовка терр. ст-ва')
     b2 = InlineKeyboardButton(
         text=const.CHAPTERS['main_objects'],
-        callback_data='main_objects')
+        callback_data='Основные объекты ст-ва')
     b3 = InlineKeyboardButton(
         text=const.CHAPTERS['extra_objects'],
-        callback_data='extra_objects')
+        callback_data='Об-ты подсобного и обслуживающего')
     b4 = InlineKeyboardButton(
         text=const.CHAPTERS['energy_objects'],
-        callback_data='energy_objects')
+        callback_data='Объекты энергетического хоз-ва')
     b5 = InlineKeyboardButton(
         text=const.CHAPTERS['transport_objects'],
-        callback_data='transport_objects')
+        callback_data='Объекты трансп. хоз-ва и связи')
     b6 = InlineKeyboardButton(
         text=const.CHAPTERS['zhkh_objects'],
-        callback_data='zhkh_objects')
+        callback_data='Наружные сети и сооружения')
     b7 = InlineKeyboardButton(
         text=const.CHAPTERS['green_objects'],
-        callback_data='green_objects')
+        callback_data='Благо-во и озеленение территории')
     b8 = InlineKeyboardButton(
         text=const.CHAPTERS['temp_objects'],
-        callback_data='temp_objects')
+        callback_data='Временные здания и сооружения')
     b9 = InlineKeyboardButton(
         text=const.CHAPTERS['other_work'],
-        callback_data='other_work')
+        callback_data='Прочие работы и затраты')
     b10 = InlineKeyboardButton(
         text=const.CHAPTERS['another_payments'],
-        callback_data='another_payments')
+        callback_data='Другие затраты')
     keyboard.row(b1)
     keyboard.row(b2)
     keyboard.row(b3)
@@ -284,9 +287,9 @@ def choose_number():
 
 def reserve_or_leave():
     keyboard = InlineKeyboardMarkup(resize_keyboard=True)
-    b1 = InlineKeyboardButton(text='Резервировать', callback_data='reserve')
+    b1 = InlineKeyboardButton(text='Резервировать', callback_data='Резервировать')
     b2 = InlineKeyboardButton(text='Оставить на свободных остатках',
-                              callback_data='leave')
+                              callback_data='Оставить на своб. остатках')
     keyboard.row(b1)
     keyboard.row(b2)
     return keyboard
@@ -404,19 +407,18 @@ async def admin_btns_tickets(message, tickets, page=1):
             callback_data='comeback'))
     kb.add_before(InlineKeyboardButton(text='Запрос обработан',
                                        callback_data='done'))
-    await message.answer((f'А{tickets[page-1].id}\n'
-                          f'1) {tickets[page-1].name}\n'
-                          f'2) {tickets[page-1].role}\n'
-                          f'3) {tickets[page-1].request_type}\n'
-                          f'3) {tickets[page-1].field_one}\n'
-                          f'4) {tickets[page-1].field_two}\n'
-                          f'5) {tickets[page-1].field_three}\n'
-                          f'6) {tickets[page-1].field_four}\n'
-                          f'7) {tickets[page-1].field_five}\n'
-                          f'8) {tickets[page-1].field_six}\n'
-                          f'9) {tickets[page-1].field_seven}\n'
-                          f'10) {tickets[page-1].field_eight}\n'
-                          f'11) {tickets[page-1].field_nine}\n'
-                          f'12) {tickets[page-1].user.user_id}'
-                          ), reply_markup=kb.markup)
 
+    list_not_none = [
+        tickets[page - 1].name, tickets[page - 1].role, tickets[page - 1].request_type,
+        tickets[page - 1].field_one, tickets[page - 1].field_two, tickets[page - 1].field_three,
+        tickets[page - 1].field_four, tickets[page - 1].field_four, tickets[page - 1].field_five,
+        tickets[page - 1].field_six, tickets[page - 1].field_seven, tickets[page - 1].field_eight,
+        tickets[page - 1].field_nine,
+    ]
+    final_str = 'A\n'
+    str_for_all = ''
+    for count, i in enumerate(list_not_none):
+        if i is not None:
+            str_for_all = f'{count+1}) {i}\n'
+            final_str += str_for_all
+    await message.answer(final_str, reply_markup=kb.markup)
