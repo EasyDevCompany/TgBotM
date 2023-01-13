@@ -8,6 +8,7 @@ from app.models.application import Application
 from states.base import Admin
 import states.tgbot_states as my_states
 from aiogram.dispatcher import FSMContext
+from app.utils import const
 from logger import logger
 
 from app.core.container import Container
@@ -93,6 +94,28 @@ async def get_comment(message: types.Message, state: FSMContext,
         msg += f'11){ticket.field_eight}\n'
     if ticket.field_nine is not None:
         msg += f'12){ticket.field_nine}\n'
+    if ticket.request_type == 'adjustment_of_supplies':
+        if ticket.field_seven != const.NO_EXTRA:
+            try:
+                media = ticket.field_seven
+                media.attach_document(types.InputMediaDocument(ticket.field_one))
+                await message.answer_media_group(ticket.field_seven)
+            except:
+                await message.answer_document(ticket.field_seven)
+    elif ticket.request_type == 'add_material':
+        media = types.MediaGroup()
+        media.attach_document(types.InputMediaDocument(ticket.field_one))
+        media.attach_document(types.InputMediaDocument(ticket.field_three))
+        await message.answer_media_group(media=media)
+    elif ticket.request_type in ['adjustment_invoice',
+                                 'change_status_application',
+                                 'add_edo',
+                                 'open_edo',
+                                 'edit_some_moving']:
+        await message.answer_document(ticket.field_one)
+    elif ticket.request_type == 'add_naming':
+        if ticket.field_six != '---':
+            await message.answer_document(ticket.field_six)
     await bot.send_message(admin_data['user_id'],
                            msg, reply_markup=kb.user_edit(ticket))
     await bot.send_message(admin_data['user_id'], message.text)

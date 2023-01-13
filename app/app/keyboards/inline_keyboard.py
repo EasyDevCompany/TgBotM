@@ -1,5 +1,7 @@
+from aiogram import types
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from utils import const_add_subobjects as const
+from utils import const as main_const
 from app.models.application import Application
 from telegram_bot_pagination import InlineKeyboardPaginator
 from aiogram.utils.callback_data import CallbackData
@@ -441,6 +443,16 @@ async def admin_btns_tickets(message, tickets, page=1):
         msg += f'11){tickets[page-1].field_eight}\n'
     if tickets[page-1].field_nine is not None:
         msg += f'12){tickets[page-1].field_nine}\n'
+    if tickets[page-1].request_type == 'adjustment_of_supplies':
+        if tickets[page-1].field_seven != main_const.NO_EXTRA:
+            try:
+                media = tickets[page-1].field_seven
+                media.attach_document(types.InputMediaDocument(tickets[page-1].field_one))
+                await message.answer_media_group(tickets[page-1].field_seven)
+            except:
+                await message.answer_document(tickets[page-1].field_seven)
+    else:
+        await message.answer_document(tickets[page-1].field_one)
     await message.answer(msg, reply_markup=kb.markup)
 
 
@@ -485,6 +497,17 @@ async def moder_btns_tickets(message, tickets, page=1):
         msg += f'11){tickets[page-1].field_eight}\n'
     if tickets[page-1].field_nine is not None:
         msg += f'12){tickets[page-1].field_nine}\n'
+    if tickets[page-1].request_type == 'add_material':
+        media = types.MediaGroup()
+        media.attach_document(types.InputMediaDocument(tickets[page-1].field_one))
+        media.attach_document(types.InputMediaDocument(tickets[page-1].field_three))
+        await message.answer_media_group(media=media)
+    elif tickets[page-1].request_type in ['adjustment_invoice',
+                                          'change_status_application',]:
+        await message.answer_document(tickets[page-1].field_one)
+    elif tickets[page-1].request_type == 'add_naming':
+        if tickets[page-1].field_six != '---':
+            await message.answer_document(tickets[page-1].field_six)
     await message.answer(msg, reply_markup=kb.markup)
 
 
