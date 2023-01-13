@@ -9,15 +9,30 @@ from app.utils import const_edit_shpmnt as text
 from app.utils.const import REQUEST_NUMBER, LOAD_DOC, \
     R_NUMBER_ERROR, INCOME_STORAGE, WHAT_EDIT_REQUEST, WHAT_EDIT, FIO, \
     ROLE, R_TYPE, NUMBER_REQUEST_IF
+from dependency_injector.wiring import inject, Provide
+from app.services.application import ApplicationService
+from app.core.container import Container
+from logger import logger
+from app.models.application import Application
 
 
-async def skip(query: types.CallbackQuery, state: FSMContext):
-    await state.update_data(field_seven=None)
-    await bot.delete_message(query.message.chat.id, query.message.message_id)
-    new_kb = kb.sure().add(kb.exit_button)
-    await query.message.answer(const.SURE, reply_markup=new_kb)
-    await get_data.send_data(query=query, state=state)
-    await state.set_state(EditShpmnt.sure)
+@inject
+async def skip(query: types. CallbackQuery, state: FSMContext,
+               application: ApplicationService = Provide[Container.application_service]):
+    data = await state.get_data()
+    if 'admin' not in data:
+        await state.update_data(field_seven=const.NO_EXTRA)
+        await bot.delete_message(query.message.chat.id, query.message.message_id)
+        new_kb = kb.sure().add(kb.exit_button)
+        await get_data.send_data(query=query, state=state)
+        await query.message.answer(const.SURE, reply_markup=new_kb)
+        await state.set_state(EditShpmnt.sure)
+    else:
+        await application.update(data['admin'],
+                                 obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                         'field_seven': const.NO_EXTRA})
+        await query.message.answer(const.CHANGE_SUCCESS)
+        await state.finish()
 
 
 async def get_note(message: types.Message, state: FSMContext):
@@ -71,19 +86,27 @@ async def get_changes(query: types.CallbackQuery, state: FSMContext):
         await state.set_state(EditShpmnt.description)
 
 
-async def get_another_changes(message: types.Message, state: FSMContext):
+@inject
+async def get_another_changes(message: types.Message, state: FSMContext,
+                              application: ApplicationService = Provide[Container.application_service]):
     data = await state.get_data()
-    if 'extra_file' not in data:
-        await state.update_data(field_five=message.text)
-        await message.answer(const.DESCRIPTION_ERROR,
-                             reply_markup=kb.exit_kb())
-        await state.set_state(EditShpmnt.description)
+    if 'admin' not in data:
+        if 'extra_file' not in data:
+            await state.update_data(field_five=message.text)
+            await message.answer(const.DESCRIPTION_ERROR,
+                                reply_markup=kb.exit_kb())
+            await state.set_state(EditShpmnt.description)
+        else:
+            await state.update_data(field_five=message.text)
+            await get_data.send_data(message=message, state=state)
+            new_kb = kb.sure().add(kb.exit_button)
+            await message.answer(const.SURE, reply_markup=new_kb)
+            await state.set_state(EditShpmnt.sure)
+
     else:
-        await state.update_data(field_five=message.text)
-        await get_data.send_data(message=message, state=state)
-        new_kb = kb.sure().add(kb.exit_button)
-        await message.answer(const.SURE, reply_markup=new_kb)
-        await state.set_state(EditShpmnt.sure)
+        await application.update(data['admin'], obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                                        'field_five': message.text})
+        await state.finish()
 
 
 async def get_description(message: types.Message, state: FSMContext):
@@ -93,16 +116,26 @@ async def get_description(message: types.Message, state: FSMContext):
     await state.set_state(EditShpmnt.extra_files)
 
 
+@inject
 async def get_extra_files(message: types.Message,
-                          state: FSMContext):
-    try:
+                          state: FSMContext,
+                          application: ApplicationService = Provide[Container.application_service]):
+    if message.media_group_id is not None:
         await state.update_data(field_seven=message.media_group_id)
-    except:
+        logger.info(message.media_group_id)
+    else:
         await state.update_data(field_seven=message.document.file_id)
-    new_kb = kb.sure().add(kb.exit_button)
-    await message.answer(const.SURE, reply_markup=new_kb)
-    await state.set_state(EditShpmnt.sure)
-    await get_data.send_data(message=message, state=state)
+    data = await state.get_data()
+    if 'admin' not in data:
+        await get_data.send_data(message=message, state=state)
+        new_kb = kb.sure().add(kb.exit_button)
+        await message.answer(const.SURE, reply_markup=new_kb)
+        await state.set_state(EditShpmnt.sure)
+    else:
+        await application.update(data['admin'], obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                                        'field_seven': data['field_seven']})
+        await message.answer(const.CHANGE_SUCCESS)
+        await state.finish()
 
 
 async def correct(query: types.CallbackQuery, state: FSMContext):
@@ -175,7 +208,9 @@ async def correct(query: types.CallbackQuery, state: FSMContext):
     await query.answer()
 
 
-async def edit(message: types.Message, state: FSMContext):
+@inject
+async def edit(message: types.Message, state: FSMContext,
+               application: ApplicationService = Provide[Container.application_service]):
     data = await state.get_data()
     point = data['change']
     if point == 'name':
@@ -190,36 +225,96 @@ async def edit(message: types.Message, state: FSMContext):
         await state.update_data(field_four=message.text)
     elif point == 'description':
         await state.update_data(field_six=message.text)
-    new_kb = kb.sure().add(kb.exit_button)
-    await get_data.send_data(message=message, state=state)
-    await message.answer(const.SURE, reply_markup=new_kb)
-    await state.set_state(EditShpmnt.sure)
+    data = await state.get_data()
+    if 'admin' not in data:
+        await get_data.send_data(message=message, state=state)
+        new_kb = kb.sure().add(kb.exit_button)
+        await message.answer(const.SURE, reply_markup=new_kb)
+        await state.set_state(EditShpmnt.sure)
+    else:
+        if 'name' in data:
+            await application.update(data['admin'],
+                                     obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                             'name': data['name']})
+        elif 'field_one' in data:
+            await application.update(data['admin'],
+                                     obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                             'field_one': data['field_one']})
+        elif 'field_two' in data:
+            await application.update(data['admin'],
+                                     obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                             'field_two': data['field_two']})
+        elif 'field_three' in data:
+            await application.update(data['admin'],
+                                     obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                             'field_three': data['field_three']})
+        elif 'field_four' in data:
+            await application.update(data['admin'],
+                                     obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                             'field_four': data['field_four']})
+        elif 'field_six' in data:
+            await application.update(data['admin'],
+                                     obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                             'field_six': data['field_six']})
+        await message.answer(const.CHANGE_SUCCESS)
+        await state.finish()
 
 
-async def get_role(query: types.CallbackQuery, state: FSMContext):
+@inject
+async def get_role(query: types.CallbackQuery, state: FSMContext,
+                   application: ApplicationService = Provide[Container.application_service]):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     await state.update_data(role=query.data)
-    new_kb = kb.sure().add(kb.exit_button)
-    await query.message.answer(const.SURE, reply_markup=new_kb)
-    await get_data.send_data(query=query, state=state)
-    await state.set_state(EditShpmnt.sure)
-
-
-async def get_changes_edit(query: types.CallbackQuery, state: FSMContext, ):
-    if query.data != 'Другое':
-        await state.update_data(field_five=query.data)
-        await bot.delete_message(query.message.chat.id,
-                                 query.message.message_id)
+    data = await state.get_data()
+    if 'admin' not in data:
         new_kb = kb.sure().add(kb.exit_button)
         await get_data.send_data(query=query, state=state)
         await query.message.answer(const.SURE, reply_markup=new_kb)
         await state.set_state(EditShpmnt.sure)
     else:
-        await bot.delete_message(
-            query.message.chat.id, query.message.message_id)
-        await query.message.answer(WHAT_EDIT,
-                                   reply_markup=kb.exit_kb())
-        await state.set_state(EditShpmnt.another_what_edit)
+        await application.update(data['admin'],
+                                 obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                         'role': data['role']})
+        await query.message.answer(const.CHANGE_SUCCESS)
+        await state.finish()
+
+
+@inject
+async def get_changes_edit(query: types.CallbackQuery, state: FSMContext,
+                               application: ApplicationService = Provide[Container.application_service]):
+        data = await state.get_data()
+        if 'admin' not in data:
+            if query.data != 'Другое':
+                await state.update_data(field_five=query.data)
+                await bot.delete_message(query.message.chat.id,
+                                         query.message.message_id)
+                await get_data.send_data(query=query, state=state)
+                new_kb = kb.sure().add(kb.exit_button)
+                await query.message.answer(const.SURE, reply_markup=new_kb)
+                await state.set_state(EditShpmnt.sure)
+            else:
+                await bot.delete_message(
+                    query.message.chat.id, query.message.message_id)
+                await query.message.answer(WHAT_EDIT,
+                                           reply_markup=kb.exit_kb())
+                await state.set_state(EditShpmnt.another_what_edit)
+        else:
+            if query.data != 'Другое':
+                await state.update_data(field_five=query.data)
+                await bot.delete_message(query.message.chat.id,
+                                         query.message.message_id)
+                data = await state.get_data()
+                await application.update(data['admin'],
+                                         obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                                 'field_five': data['field_five']})
+                await query.message.answer(const.CHANGE_SUCCESS)
+                await state.finish()
+            else:
+                await bot.delete_message(
+                    query.message.chat.id, query.message.message_id)
+                await query.message.answer(WHAT_EDIT,
+                                           reply_markup=kb.exit_kb())
+                await state.set_state(EditShpmnt.another_what_edit)
 
 
 def register(dp: Dispatcher):
@@ -237,7 +332,7 @@ def register(dp: Dispatcher):
     dp.register_message_handler(edit,
                                 state=EditShpmnt.edit,
                                 content_types=['text', 'document'])
-    dp.register_callback_query_handler(skip, state=EditShpmnt.extra_files)
+    dp.register_callback_query_handler(skip, text='skip', state=EditShpmnt.extra_files)
     dp.register_callback_query_handler(get_changes, state=EditShpmnt.what_edit)
     dp.register_callback_query_handler(correct, state=EditShpmnt.sure)
     dp.register_callback_query_handler(get_role, state=EditShpmnt.edit)

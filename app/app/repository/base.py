@@ -30,6 +30,7 @@ class RepositoryBase(Generic[ModelType, ]):
             self,
             *,
             db_obj: ModelType,
+            commit=False,
             obj_in
     ) -> ModelType:
         if isinstance(obj_in, dict):
@@ -41,8 +42,13 @@ class RepositoryBase(Generic[ModelType, ]):
                 setattr(db_obj, field, update_data[field])
         self._session.add(db_obj)
         self._session.flush()
+        if commit:
+            self._session.commit()
         return db_obj
 
-    def delete(self, *args, db_obj: Optional[ModelType], **kwargs) -> ModelType:
+    def delete(self, *args, db_obj: Optional[ModelType],
+               commit=False, **kwargs) -> ModelType:
         self._session.delete(db_obj)
         self._session.flush()
+        if commit:
+            self._session.commit()

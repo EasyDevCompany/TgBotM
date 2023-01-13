@@ -9,6 +9,10 @@ from app.states.tgbot_states import UpdateStorage
 from app.utils import const, get_data
 from app.utils.const import EDIT_NEW_STORAGE, REQUEST_NUMBER, EDIT_CONTACT_NAME, EDIT_ADDRESS, ERROR_CONTACT, \
     ADDRESS_ERROR, FIO, ROLE, R_TYPE
+from dependency_injector.wiring import inject, Provide
+from app.services.application import ApplicationService
+from app.core.container import Container
+from app.models.application import Application
 
 
 async def get_number_bid(message: types.Message, state: FSMContext):
@@ -112,7 +116,9 @@ async def correct(query: types.CallbackQuery, state: FSMContext):
     await query.answer()
 
 
-async def edit(message: types.Message, state: FSMContext):
+@inject
+async def edit(message: types.Message, state: FSMContext,
+               application: ApplicationService = Provide[Container.application_service]):
     data = await state.get_data()
     point = data['change']
     if point == 'name':
@@ -125,21 +131,55 @@ async def edit(message: types.Message, state: FSMContext):
         await state.update_data(field_three=message.text)
     elif point == 'address':
         await state.update_data(field_four=message.text)
-    new_kb = kb.sure().add(kb.exit_button)
-    await get_data.send_data(message=message, state=state)
-    await message.answer(const.SURE,
-                         reply_markup=new_kb)
-    await state.set_state(UpdateStorage.sure)
+    data = await state.get_data()
+    if 'admin' not in data:
+        await get_data.send_data(message=message, state=state)
+        new_kb = kb.sure().add(kb.exit_button)
+        await message.answer(const.SURE, reply_markup=new_kb)
+        await state.set_state(UpdateStorage.sure)
+    else:
+        if 'name' in data:
+            await application.update(data['admin'],
+                                     obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                             'name': data['name']})
+        elif 'field_one' in data:
+            await application.update(data['admin'],
+                                     obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                             'field_one': data['field_one']})
+        elif 'field_two' in data:
+            await application.update(data['admin'],
+                                     obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                             'field_two': data['field_two']})
+        elif 'field_three' in data:
+            await application.update(data['admin'],
+                                     obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                             'field_three': data['field_three']})
+        elif 'field_four' in data:
+            await application.update(data['admin'],
+                                     obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                             'field_four': data['field_four']})
+        await message.answer(const.CHANGE_SUCCESS)
+        await state.finish()
 
 
-async def get_role(query: types.CallbackQuery, state: FSMContext):
+@inject
+async def get_role(query: types.CallbackQuery, state: FSMContext,
+                   application: ApplicationService = Provide[Container.application_service]):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     await state.update_data(role=query.data)
-    new_kb = kb.sure().add(kb.exit_button)
-    await get_data.send_data(query=query, state=state)
-    await query.message.answer(const.SURE,
-                               reply_markup=new_kb)
-    await state.set_state(UpdateStorage.sure)
+    data = await state.get_data()
+    if 'admin' not in data:
+        await get_data.send_data(query=query, state=state)
+        new_kb = kb.sure().add(kb.exit_button)
+        await query.message.answer(const.SURE,
+                                   reply_markup=new_kb)
+        await state.set_state(UpdateStorage.sure)
+    else:
+        await application.update(data['admin'],
+                                 obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                         'role': data['role']})
+        await query.message.answer(const.CHANGE_SUCCESS)
+        await state.finish()
 
 
 def register(dp: Dispatcher):
