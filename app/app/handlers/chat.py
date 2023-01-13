@@ -7,6 +7,7 @@ from dependency_injector.wiring import inject, Provide
 from app.models.application import Application
 from app.states.base import Admin
 from aiogram.dispatcher import FSMContext
+from app.utils import const
 from logger import logger
 import app.states.tgbot_states as my_states
 from app.utils import const
