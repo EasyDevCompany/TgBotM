@@ -43,7 +43,6 @@ async def admin_page_callback(call: types.CallbackQuery,
     page = int(call.data.split('#')[1])
     tickets = await application.applications_for(
         Application.RequestAnswered.admin)
-    await call.message.answer(call.data)
     await kb.admin_btns_tickets(call.message, tickets, page)
     await bot.delete_message(call.message.chat.id, call.message.message_id)
 
@@ -63,7 +62,7 @@ async def comeback(query: types.CallbackQuery, callback_data: dict,
     number = callback_data['id']
     user_id = callback_data['user_id']
     await state.update_data(number=number, user_id=user_id)
-    await query.message.answer('Ведите комментарий: ')
+    await query.message.answer('Введите комментарий: ')
     await state.set_state(Admin.comment)
 
 
@@ -78,7 +77,8 @@ async def get_comment(message: types.Message, state: FSMContext,
     msg += f'3){ticket.request_type}\n'
     msg += f'4){ticket.field_one}\n'
     msg += f'5){ticket.field_two}\n'
-    msg += f'6){ticket.field_three}\n'
+    if ticket.field_three is not None:
+        msg += f'6){ticket.field_three}\n'
     if ticket.field_four is not None:
         msg += f'7){ticket.field_four}\n'
     if ticket.field_five is not None:
@@ -136,6 +136,7 @@ async def user_edit_ticket(query: types.CallbackQuery,
                      'request_answered',
                      '_sa_instance_state',
                      'sender_user_id',
+                     'sender_user',
                      'recipient_user_id'] and v is not None:
             count_buttons += 1
     await state.update_data(admin=number)
@@ -208,6 +209,3 @@ def register_chat_handler(dp: Dispatcher):
     dp.register_callback_query_handler(take_to_work, kb.cb_admin.filter(action='take_to_work'))
     dp.register_callback_query_handler(success, kb.cb_admin.filter(action='success'))
     dp.register_message_handler(moder, Command('moderator'))
-
-
-    

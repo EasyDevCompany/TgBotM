@@ -31,8 +31,8 @@ administrator.edit_some_moving.register(dp=dp)
 administrator.adjustment_of_supplies.register(dp=dp)
 
 
-def on_startup(dispatcher: Dispatcher):
-    middlewares.setup(dp=dispatcher)
+# def on_startup(dispatcher: Dispatcher):
+#     middlewares.setup(dp=dispatcher)
 
 
 if __name__ == "__main__":
@@ -55,4 +55,4 @@ if __name__ == "__main__":
                             moderator.edit_subobject,
                             moderator.edit_view_job,
                             moderator.update_storage])
-    executor.start_polling(dp, skip_updates=True, on_startup=on_startup(dispatcher=dp))
+    executor.start_polling(dp, skip_updates=True)

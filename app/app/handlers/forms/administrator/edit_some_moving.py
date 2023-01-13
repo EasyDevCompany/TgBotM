@@ -205,7 +205,7 @@ async def edit(message: types.Message, state: FSMContext,
     elif point == 'note':
         await state.update_data(field_one=message.document.file_id)
     elif point == 'number_ticket':
-        await state.update_data(number_ticket=['Номер заявки', message.text])
+        await state.update_data(field_two=message.text)
     elif point == 'number_invoice':
         await state.update_data(field_three=message.text)
     elif point == 'storage_out':
@@ -296,39 +296,39 @@ async def get_status_edit(query: types.CallbackQuery, state: FSMContext,
 @inject
 async def get_reason_edit(query: types.CallbackQuery, state: FSMContext,
                           application: ApplicationService = Provide[Container.application_service]):
-        data = await state.get_data()
-        if 'admin' not in data:
-            if query.data != 'Другое':
-                await state.update_data(field_seven=query.data)
-                await bot.delete_message(query.message.chat.id,
-                                         query.message.message_id)
-                await get_data.send_data(query=query, state=state)
-                new_kb = kb.sure().add(kb.exit_button)
-                await query.message.answer(const.SURE, reply_markup=new_kb)
-                await state.set_state(EditMoveAdm.sure)
-            else:
-                await bot.delete_message(query.message.chat.id,
-                                         query.message.message_id)
-                await query.message.answer(INPUT_REASON,
-                                           reply_markup=kb.exit_kb())
-                await state.set_state(EditMoveAdm.another_reason)
+    data = await state.get_data()
+    if 'admin' not in data:
+        if query.data != 'Другое':
+            await state.update_data(field_seven=query.data)
+            await bot.delete_message(query.message.chat.id,
+                                     query.message.message_id)
+            await get_data.send_data(query=query, state=state)
+            new_kb = kb.sure().add(kb.exit_button)
+            await query.message.answer(const.SURE, reply_markup=new_kb)
+            await state.set_state(EditMoveAdm.sure)
         else:
-            if query.data != 'Другое':
-                await state.update_data(field_seven=query.data)
-                await bot.delete_message(query.message.chat.id,
-                                         query.message.message_id)
-                data = await state.get_data()
-                await application.update(data['admin'],
-                                         obj_in={'application_status': Application.ApplicationStatus.in_work,
-                                                 'field_seven': data['field_seven']})
-                await query.message.answer(const.CHANGE_SUCCESS)
-                await state.finish()
-            else:
-                await bot.delete_message(query.message.chat.id,
-                                         query.message.message_id)
-                await query.message.answer(INPUT_REASON,
-                                           reply_markup=kb.exit_kb())
-                await state.set_state(EditMoveAdm.another_reason)
+            await bot.delete_message(query.message.chat.id,
+                                     query.message.message_id)
+            await query.message.answer(INPUT_REASON,
+                                       reply_markup=kb.exit_kb())
+            await state.set_state(EditMoveAdm.another_reason)
+    else:
+        if query.data != 'Другое':
+            await state.update_data(field_seven=query.data)
+            await bot.delete_message(query.message.chat.id,
+                                        query.message.message_id)
+            data = await state.get_data()
+            await application.update(data['admin'],
+                                     obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                             'field_seven': data['field_seven']})
+            await query.message.answer(const.CHANGE_SUCCESS)
+            await state.finish()
+        else:
+            await bot.delete_message(query.message.chat.id,
+                                        query.message.message_id)
+            await query.message.answer(INPUT_REASON,
+                                       reply_markup=kb.exit_kb())
+            await state.set_state(EditMoveAdm.another_reason)
 
 
 def register(dp: Dispatcher):

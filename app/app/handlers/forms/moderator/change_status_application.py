@@ -10,6 +10,7 @@ from dependency_injector.wiring import inject, Provide
 from app.services.application import ApplicationService
 from app.core.container import Container
 from app.models.application import Application
+from logger import logger
 
 
 async def get_note(message: types.Message, state: FSMContext):
@@ -66,6 +67,8 @@ async def correct(query: types.CallbackQuery, state: FSMContext):
         await query.message.answer(R_TYPE,
                                    reply_markup=new_kb)
         await state.set_state(BaseStates.request_type)
+        data = await state.get_data()
+        logger.info(data)
     elif query.data == '4':
         await bot.delete_message(
             query.message.chat.id, query.message.message_id)

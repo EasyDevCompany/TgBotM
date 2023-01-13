@@ -20,6 +20,7 @@ import app.keyboards.inline_keyboard as kb
 from app.loader import bot
 from app.states.base import BaseStates
 import app.states.tgbot_states as my_states
+from logger import logger
 from app.utils.const import EDIT_POINT, FIO, ROLE, ERROR_CONTACT, R_TYPE, WAITING_ANSWER
 
 
@@ -35,8 +36,11 @@ async def edit_data(query: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     if 'change' in data:
         del data['change']
-    elif 'message_id' in data:
+    try:
         del data['message_id']
+    except:
+        pass
+    logger.info(data)
     await query.message.answer(EDIT_POINT,
                                reply_markup=kb.genmarkup(data=data))
     await query.answer()

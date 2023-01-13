@@ -28,7 +28,7 @@ skip_button = InlineKeyboardButton(text='Пропустить', callback_data='s
 def genmarkup(data):
     keyboard = InlineKeyboardMarkup()
     keyboard.row_width = 1
-    for i in range(1, len(data) + 1):
+    for i in range(1, len(data)):
         keyboard.add(InlineKeyboardButton(i, callback_data=i))
     return keyboard
 
@@ -491,7 +491,8 @@ async def moder_btns_tickets(message, tickets, page=1):
     msg += f'3){tickets[page - 1].request_type}\n'
     msg += f'4){tickets[page - 1].field_one}\n'
     msg += f'5){tickets[page - 1].field_two}\n'
-    msg += f'6){tickets[page - 1].field_three}\n'
+    if tickets[page - 1].field_three is not None:
+        msg += f'6){tickets[page - 1].field_three}\n'
     if tickets[page - 1].field_four is not None:
         msg += f'7){tickets[page - 1].field_four}\n'
     if tickets[page - 1].field_five is not None:

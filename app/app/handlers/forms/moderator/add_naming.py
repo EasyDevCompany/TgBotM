@@ -10,6 +10,7 @@ from dependency_injector.wiring import inject, Provide
 from app.services.application import ApplicationService
 from app.core.container import Container
 from app.models.application import Application
+from logger import logger
 
 
 @inject
@@ -212,6 +213,7 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     await state.update_data(role=query.data)
     data = await state.get_data()
+    logger.info(data)
     if 'admin' not in data:
         await get_data.send_data(query=query, state=state)
         new_kb = kb.sure().add(kb.exit_button)
@@ -227,6 +229,7 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
 
 
 def register(dp: Dispatcher):
+    dp.register_callback_query_handler(get_role, state=AddNaming.edit)
     dp.register_message_handler(get_section_material,
                                 state=AddNaming.section_material)
     dp.register_message_handler(get_subsection_material,
@@ -246,4 +249,4 @@ def register(dp: Dispatcher):
     dp.register_callback_query_handler(skip, state=[AddNaming.add_several_naming,
                                                     AddNaming.edit])
     dp.register_callback_query_handler(correct, state=AddNaming.sure)
-    dp.register_callback_query_handler(get_role, state=AddNaming.edit)
+    

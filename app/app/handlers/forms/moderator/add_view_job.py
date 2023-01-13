@@ -199,6 +199,19 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
                    application: ApplicationService = Provide[Container.application_service]):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     await state.update_data(role=query.data)
+    data = await state.get_data()
+    if 'admin' not in data:
+        await get_data.send_data(query=query, state=state)
+        new_kb = kb.sure().add(kb.exit_button)
+        await query.message.answer(const.SURE,
+                                   reply_markup=new_kb)
+        await state.set_state(AddViewWork.sure)
+    else:
+        await application.update(data['admin'],
+                                 obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                         'role': data['role']})
+        await query.message.answer(const.CHANGE_SUCCESS)
+        await state.finish()
 
 
 def register(dp: Dispatcher):

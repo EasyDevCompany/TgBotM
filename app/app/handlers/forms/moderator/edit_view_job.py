@@ -156,6 +156,7 @@ async def edit(message: types.Message, state: FSMContext,
         await state.finish()
 
 
+@inject
 async def get_subsystems_edit(query: types.CallbackQuery, state: FSMContext,
                               application: ApplicationService = Provide[Container.application_service]):
     new_kb = kb.accept().add(kb.exit_button)
