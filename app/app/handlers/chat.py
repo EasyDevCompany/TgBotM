@@ -96,23 +96,23 @@ async def get_comment(message: types.Message, state: FSMContext,
             try:
                 media = ticket.field_seven
                 media.attach_document(types.InputMediaDocument(ticket.field_one))
-                await message.answer_media_group(ticket.field_seven)
+                await bot.send_media_group(admin_data['user_id'], ticket.field_seven)
             except:
-                await message.answer_document(ticket.field_seven)
+                await bot.send_document(admin_data['user_id'], ticket.field_seven)
     elif ticket.request_type == 'Добавление материалов на свободный остаток':
         media = types.MediaGroup()
         media.attach_document(types.InputMediaDocument(ticket.field_one))
         media.attach_document(types.InputMediaDocument(ticket.field_three))
-        await message.answer_media_group(media=media)
+        await bot.send_media_group(admin_data['user_id'], media=media)
     elif ticket.request_type in ['Корректировка оформленной накладной',
                                  'Смена статуса заявки',
                                  'Добавление объекта в ЭДО',
                                  'Открытие доступов Эдо для сотрудников',
                                  'Редактирование некорректного перемещения']:
-        await message.answer_document(ticket.field_one)
+        await bot.send_document(admin_data['user_id'], ticket.field_one)
     elif ticket.request_type == 'Добавление наименований':
         if ticket.field_six != '---':
-            await message.answer_document(ticket.field_six)
+            await bot.send_document(admin_data['user_id'], ticket.field_six)
     await bot.send_message(admin_data['user_id'],
                            msg, reply_markup=kb.user_edit(ticket))
     await bot.send_message(admin_data['user_id'], message.text)
