@@ -13,6 +13,7 @@ from dependency_injector.wiring import inject, Provide
 from app.services.application import ApplicationService
 from app.core.container import Container
 from app.models.application import Application
+from loguru import logger
 
 
 async def get_number_bid(message: types.Message, state: FSMContext):
@@ -48,14 +49,27 @@ async def get_fio(message: types.Message, state: FSMContext):
         await message.answer(ERROR_CONTACT)
 
 
-async def get_address(message: types.Message, state: FSMContext):
+@inject
+async def get_address(message: types.Message, state: FSMContext,
+                      application: ApplicationService = Provide[Container.application_service]):
     if not message.text.isdigit():
         await state.update_data(field_four=message.text)
-        await get_data.send_data(message=message, state=state)
-        new_kb = kb.sure().add(kb.exit_button)
-        await message.answer(const.SURE,
-                             reply_markup=new_kb)
-        await state.set_state(UpdateStorage.sure)
+        data = await state.get_data()
+        if 'admin' not in data:
+            await get_data.send_data(message=message, state=state)
+            new_kb = kb.sure().add(kb.exit_button)
+            await message.answer(const.SURE, reply_markup=new_kb)
+            await state.set_state(UpdateStorage.sure)
+        else:
+            black_list = {'admin'}
+            new_data = {key: val for key, val in data.items() if key not in black_list}
+            unused = ['field_five', 'field_six', 'field_seven', 'field_eight', 'field_nine']
+            for i in unused:
+                new_data[i] = None
+            logger.info(new_data)
+            await application.update(data['admin'], obj_in=new_data)
+            await message.answer(const.CHANGE_SUCCESS)
+            await state.finish()
     else:
         await message.answer(ADDRESS_ERROR)
         await state.set_state(UpdateStorage.address_storage)
@@ -77,13 +91,18 @@ async def correct(query: types.CallbackQuery, state: FSMContext):
                                    reply_markup=new_kb)
         await state.set_state(UpdateStorage.edit)
     elif query.data == '3':
-        await bot.delete_message(
-            query.message.chat.id, query.message.message_id)
-        await state.update_data(change='request_type')
-        new_kb = kb.main_kb().add(kb.exit_button)
-        await query.message.answer(R_TYPE,
-                                   reply_markup=new_kb)
-        await state.set_state(BaseStates.request_type)
+        data = await state.get_data()
+        if 'admin' in data:
+            await bot.delete_message(query.message.chat.id,
+                                     query.message.message_id)
+            await query.message.answer(text=FIO, reply_markup=kb.exit_kb())
+            await state.set_state(BaseStates.fio)
+        else:
+            await bot.delete_message(
+                query.message.chat.id, query.message.message_id)
+            await state.finish()
+            await query.message.answer(text=FIO, reply_markup=kb.exit_kb())
+            await state.set_state(BaseStates.fio)
     elif query.data == '4':
         await bot.delete_message(
             query.message.chat.id, query.message.message_id)

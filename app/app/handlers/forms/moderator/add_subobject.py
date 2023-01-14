@@ -40,7 +40,9 @@ async def get_sort(message: types.Message, state: FSMContext):
     await state.set_state(AddObj.subsystems)
 
 
-async def get_subsystems(query: types.CallbackQuery, state: FSMContext):
+@inject
+async def get_subsystems(query: types.CallbackQuery, state: FSMContext,
+                         application: ApplicationService = Provide[Container.application_service]):
     new_kb = kb.accept().add(kb.exit_button)
     data = await state.get_data()
     if query.data != 'accept' and 'field_five' not in data:
@@ -53,15 +55,24 @@ async def get_subsystems(query: types.CallbackQuery, state: FSMContext):
         await state.update_data(field_five=data['field_five'] + ', ' + query.data)
         new_data = await state.get_data()
         await bot.edit_message_text(new_data['field_five'],
-                                    query.message.chat.id, new_data['message_id'], reply_markup=new_kb)
+                                    query.message.chat.id, data['message_id'], reply_markup=new_kb)
     else:
-        await bot.delete_message(
-            query.message.chat.id, query.message.message_id)
-        await get_data.send_data(query=query, state=state)
-        new_kb = kb.sure().add(kb.exit_button)
-        await query.message.answer(const.SURE,
-                                   reply_markup=new_kb)
-        await state.set_state(AddObj.sure)
+        if 'admin' not in data:
+            await bot.delete_message(
+                query.message.chat.id, query.message.message_id)
+            await get_data.send_data(query=query, state=state)
+            new_kb = kb.sure().add(kb.exit_button)
+            await query.message.answer(const.SURE, reply_markup=new_kb)
+            await state.set_state(AddObj.sure)
+        else:
+            black_list = {'admin'}
+            new_data = {key: val for key, val in data.items() if key not in black_list}
+            unused = ['field_six', 'field_seven', 'field_eight', 'field_nine']
+            for i in unused:
+                new_data[i] = None
+            await application.update(data['admin'], obj_in=new_data)
+            await query.message.answer(const.CHANGE_SUCCESS)
+            await state.finish()
     await query.answer()
 
 
@@ -81,13 +92,18 @@ async def correct(query: types.CallbackQuery, state: FSMContext):
                                    reply_markup=new_kb)
         await state.set_state(AddObj.edit)
     elif query.data == '3':
-        await bot.delete_message(
-            query.message.chat.id, query.message.message_id)
-        await state.update_data(change='request_type')
-        new_kb = kb.main_kb().add(kb.exit_button)
-        await query.message.answer(R_TYPE,
-                                   reply_markup=new_kb)
-        await state.set_state(BaseStates.request_type)
+        data = await state.get_data()
+        if 'admin' in data:
+            await bot.delete_message(query.message.chat.id,
+                                     query.message.message_id)
+            await query.message.answer(text=FIO, reply_markup=kb.exit_kb())
+            await state.set_state(BaseStates.fio)
+        else:
+            await bot.delete_message(
+                query.message.chat.id, query.message.message_id)
+            await state.finish()
+            await query.message.answer(text=FIO, reply_markup=kb.exit_kb())
+            await state.set_state(BaseStates.fio)
     elif query.data == '4':
         await bot.delete_message(
             query.message.chat.id, query.message.message_id)

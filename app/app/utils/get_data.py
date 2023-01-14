@@ -55,12 +55,10 @@ async def send_data(state, query=None, message=None):
                 await query.message.answer_document(data['field_six'])
         elif data['request_type'] == 'Корректировка поставок':
             if data['field_seven'] != const.NO_EXTRA:
-                try:
-                    media = data['field_seven']
-                    media.attach_document(types.InputMediaDocument(data['field_one']))
-                    await query.message.answer_media_group(data['field_seven'])
-                except:
-                    await query.message.answer_document(data['field_seven'])
+                await query.message.answer_document(data['field_one'])
+                list_ids = data['field_seven'].split(', ')
+                for i in list_ids:
+                    await query.message.answer_document(i)
         await query.message.answer(msg)
     else:
         if data['request_type'] in ['Смена статуса заявки',
@@ -79,10 +77,8 @@ async def send_data(state, query=None, message=None):
                 await message.answer_document(data['field_six'])
         elif data['request_type'] == 'Корректировка поставок':
             if data['field_seven'] != const.NO_EXTRA:
-                try:
-                    media = data['field_seven']
-                    media.attach_document(types.InputMediaDocument(data['field_one']))
-                    await message.answer_media_group(data['field_seven'])
-                except:
-                    await message.answer_document(data['field_seven'])
+                await message.answer_document(data['field_one'])
+                list_ids = data['field_seven'].split(', ')
+                for i in list_ids:
+                    await message.answer_document(i)
         await message.answer(msg)

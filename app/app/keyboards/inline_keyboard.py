@@ -6,6 +6,7 @@ from app.models.application import Application
 from telegram_bot_pagination import InlineKeyboardPaginator
 from aiogram.utils.callback_data import CallbackData
 from aiogram import types
+from loguru import logger
 
 start_work = InlineKeyboardMarkup().add(
     InlineKeyboardButton(
@@ -23,6 +24,7 @@ start_support = InlineKeyboardMarkup().add(
 
 exit_button = InlineKeyboardButton(text='Отмена', callback_data="exit")
 skip_button = InlineKeyboardButton(text='Пропустить', callback_data='skip')
+send_file_btn = InlineKeyboardButton('Отправить', callback_data='send_file')
 
 
 def genmarkup(data):
@@ -452,12 +454,11 @@ async def admin_btns_tickets(message, tickets, page=1):
         msg += f'12){tickets[page - 1].field_nine}\n'
     if tickets[page - 1].request_type == 'Корректировка поставок':
         if tickets[page - 1].field_seven != main_const.NO_EXTRA:
-            try:
-                media = tickets[page - 1].field_seven
-                media.attach_document(types.InputMediaDocument(tickets[page - 1].field_one))
-                await message.answer_media_group(tickets[page - 1].field_seven)
-            except:
-                await message.answer_document(tickets[page - 1].field_seven)
+            logger.info(tickets[page-1].field_seven)
+            await message.answer_document(tickets[page-1].field_one)
+            list_ids = tickets[page-1].field_seven.split(', ')
+            for i in list_ids:
+                await message.answer_document(i)
     else:
         await message.answer_document(tickets[page - 1].field_one)
     await message.answer(msg, reply_markup=kb.markup)

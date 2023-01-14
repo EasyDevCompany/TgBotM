@@ -11,6 +11,7 @@ from dependency_injector.wiring import inject, Provide
 from app.services.application import ApplicationService
 from app.core.container import Container
 from app.models.application import Application
+from loguru import logger
 
 
 async def get_note(message: types.Message, state: FSMContext):
@@ -74,12 +75,23 @@ async def get_storage(message: types.Message, state: FSMContext,
                                      reply_markup=new_kb)
                 await state.set_state(AddObjAdm.sure)
             else:
-                await application.update(data['admin'],
-                                         obj_in={'application_status': Application.ApplicationStatus.in_work,
-                                                 'field_four': data['field_four'],
-                                                 'field_five': data['field_five']})
-                await message.answer(const.CHANGE_SUCCESS)
-                await state.finish()
+                if 'field_one' in data:
+                    black_list = {'admin'}
+                    new_data = {key: val for key, val in data.items() if key not in black_list}
+                    unused = ['field_six', 'field_seven', 'field_eight', 'field_nine']
+                    for i in unused:
+                        new_data[i] = None
+                    logger.info(new_data)
+                    await application.update(data['admin'], obj_in=new_data)
+                    await message.answer(const.CHANGE_SUCCESS)
+                    await state.finish()
+                else:
+                    await application.update(data['admin'],
+                                            obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                                    'field_four': data['field_four'],
+                                                    'field_five': data['field_five']})
+                    await message.answer(const.CHANGE_SUCCESS)
+                    await state.finish()
         else:
             await message.answer(STORAGE_ERROR)
             await state.set_state(AddObjAdm.storage)
@@ -105,13 +117,18 @@ async def correct(query: types.CallbackQuery, state: FSMContext):
                                    reply_markup=new_kb)
         await state.set_state(AddObjAdm.edit)
     elif query.data == '3':
-        await state.update_data(change='request_type')
-        await bot.delete_message(
-            query.message.chat.id, query.message.message_id)
-        new_kb = kb.main_kb().add(kb.exit_button)
-        await query.message.answer(R_TYPE,
-                                   reply_markup=new_kb)
-        await state.set_state(BaseStates.request_type)
+        data = await state.get_data()
+        if 'admin' in data:
+            await bot.delete_message(query.message.chat.id,
+                                     query.message.message_id)
+            await query.message.answer(text=FIO, reply_markup=kb.exit_kb())
+            await state.set_state(BaseStates.fio)
+        else:
+            await bot.delete_message(
+                query.message.chat.id, query.message.message_id)
+            await state.finish()
+            await query.message.answer(text=FIO, reply_markup=kb.exit_kb())
+            await state.set_state(BaseStates.fio)
     elif query.data == '4':
         await state.update_data(change='note')
         await bot.delete_message(

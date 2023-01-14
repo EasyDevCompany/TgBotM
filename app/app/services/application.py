@@ -47,3 +47,9 @@ class ApplicationService:
         db_obj = self._repository_application.get(id=application_id)
         return self._repository_application.delete(db_obj=db_obj,
                                                    commit=True)
+
+    # async def check_application(self) -> bool:
+    #     app = self._repository_application.check_not_success()
+    #     if app is None:
+    #         return False
+    #     return True

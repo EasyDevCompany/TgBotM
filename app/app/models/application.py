@@ -83,7 +83,7 @@ class Application(Base):
     field_four = Column(String(300))
     field_five = Column(String(300), nullable=True)
     field_six = Column(String(300), nullable=True)
-    field_seven = Column(String(300), nullable=True)
+    field_seven = Column(String(1000), nullable=True)
     field_eight = Column(String(300), nullable=True)
     field_nine = Column(String(300), nullable=True)
     sender_user = relationship('TelegramUser', foreign_keys=[sender_user_id])

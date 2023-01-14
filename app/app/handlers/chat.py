@@ -21,7 +21,11 @@ async def admin(message: types.Message,
     try:
         tickets = await application.applications_for(
             Application.RequestAnswered.admin)
-        await kb.admin_btns_tickets(message=message, tickets=tickets)
+        new_tickets = []
+        for ticket in tickets:
+            if ticket.application_status != Application.ApplicationStatus.success:
+                new_tickets.append(ticket)
+        await kb.admin_btns_tickets(message=message, tickets=new_tickets)
     except:
         await message.answer('Нет новых заявок')
 
@@ -32,19 +36,28 @@ async def moder(message: types.Message,
     try:
         tickets = await application.applications_for(
             Application.RequestAnswered.moderator)
-        await kb.moder_btns_tickets(message=message, tickets=tickets)
+        new_tickets = []
+        for ticket in tickets:
+            if ticket.application_status != Application.ApplicationStatus.success:
+                new_tickets.append(ticket)
+        await kb.moder_btns_tickets(message=message, tickets=new_tickets)
     except:
         await message.answer('Нет новых заявок')
 
 
 @inject
 async def admin_page_callback(call: types.CallbackQuery,
-                                   application: ApplicationService = Provide[Container.application_service]):
+                              application: ApplicationService = Provide[Container.application_service]):
     page = int(call.data.split('#')[1])
     tickets = await application.applications_for(
         Application.RequestAnswered.admin)
-    await kb.admin_btns_tickets(call.message, tickets, page)
+    new_tickets = []
+    for ticket in tickets:
+        if ticket.application_status != Application.ApplicationStatus.success:
+            new_tickets.append(ticket)
+    await kb.admin_btns_tickets(call.message, new_tickets, page)
     await bot.delete_message(call.message.chat.id, call.message.message_id)
+    await call.answer()
 
 
 @inject
@@ -53,8 +66,13 @@ async def moder_page_callback(call: types.CallbackQuery,
     page = int(call.data.split('#')[1])
     tickets = await application.applications_for(
         Application.RequestAnswered.moderator)
-    await kb.moder_btns_tickets(call.message, tickets, page)
+    new_tickets = []
+    for ticket in tickets:
+        if ticket.application_status != Application.ApplicationStatus.success:
+            new_tickets.append(ticket)
+    await kb.moder_btns_tickets(call.message, new_tickets, page)
     await bot.delete_message(call.message.chat.id, call.message.message_id)
+    await call.answer()
 
 
 async def comeback(query: types.CallbackQuery, callback_data: dict,
@@ -64,6 +82,7 @@ async def comeback(query: types.CallbackQuery, callback_data: dict,
     await state.update_data(number=number, user_id=user_id)
     await query.message.answer('Введите комментарий: ')
     await state.set_state(Admin.comment)
+    await query.answer()
 
 
 @inject
@@ -93,12 +112,11 @@ async def get_comment(message: types.Message, state: FSMContext,
         msg += f'12){ticket.field_nine}\n'
     if ticket.request_type == 'Корректировка поставок':
         if ticket.field_seven != const.NO_EXTRA:
-            try:
-                media = ticket.field_seven
-                media.attach_document(types.InputMediaDocument(ticket.field_one))
-                await bot.send_media_group(admin_data['user_id'], ticket.field_seven)
-            except:
-                await bot.send_document(admin_data['user_id'], ticket.field_seven)
+            await message.answer_document(ticket.field_one)
+            logger.info(ticket.field_seven)
+            list_ids = ticket.field_seven.split(', ')
+            for i in list_ids:
+                await message.answer_document(i)
     elif ticket.request_type == 'Добавление материалов на свободный остаток':
         media = types.MediaGroup()
         media.attach_document(types.InputMediaDocument(ticket.field_one))
@@ -172,6 +190,7 @@ async def user_edit_ticket(query: types.CallbackQuery,
     await query.message.answer(
         'Выбери пункт редактирования',
         reply_markup=kb.another_genmarkup(count_buttons))
+    await query.answer()
 
 
 @inject
@@ -185,6 +204,7 @@ async def take_to_work(query: types.CallbackQuery,
             'application_status': Application.ApplicationStatus.in_work},
         user_id=query.from_user.id)
     await bot.send_message(user_id, 'Ваша заявка принята')
+    await query.answer()
 
 
 @inject
@@ -197,6 +217,7 @@ async def success(query: types.CallbackQuery,
         number, obj_in={
             'application_status': Application.ApplicationStatus.success})
     await bot.send_message(user_id, 'Ваша заявка обработана')
+    await query.answer()
 
 
 def register_chat_handler(dp: Dispatcher):

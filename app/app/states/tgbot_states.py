@@ -100,6 +100,7 @@ class EditShpmnt(BaseStates):
     another_what_edit = State()
     description = State()
     extra_files = State()
+    more_extra = State()
     sure = State()
     edit = State()
 
