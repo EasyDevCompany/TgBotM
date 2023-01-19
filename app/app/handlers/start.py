@@ -21,7 +21,9 @@ from app.loader import bot
 from app.states.base import BaseStates
 import app.states.tgbot_states as my_states
 from logger import logger
-from app.utils.const import EDIT_POINT, FIO, ROLE, ERROR_CONTACT, R_TYPE, WAITING_ANSWER
+from app.utils.const import EDIT_POINT, FIO, ROLE, ERROR_CONTACT, R_TYPE, WAITING_ANSWER, TEMPLATE_EDITION_NAMING, \
+    CHANGE_STATUS, ADD_MATERIALS_DOC, ADD_MATERIALS_XLSX, ADD_OBJECT, OPEN_ACCESS, EDIT_NOT_CORRECT, EDIT_SHIPMENT, \
+    CORR_INV
 
 
 async def cancel(query: types. CallbackQuery, state: FSMContext):
@@ -152,7 +154,7 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
                                    reply_markup=new_kb)
         await state.set_state(my_states.AddObj.chapter)
     elif query.data == 'change_status':
-        path = Path(pathlib.Path.cwd(), "Смена статуса заявки.docx")
+        path = Path(pathlib.Path.cwd(), CHANGE_STATUS)
         await state.update_data(
             request_type=Application.RequestType.change_status_application)
         await state.update_data(
@@ -197,7 +199,7 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
         await query.message.answer(const.NUMBER_BID, reply_markup=kb.exit_kb())
         await state.set_state(my_states.UpdateStorage.number_bid)
     elif query.data == 'add_names':
-        path = Path(pathlib.Path.cwd(), "шаблон_добавления_наименований_материалов_в_ЭДО.xlsx")
+        path = Path(pathlib.Path.cwd(), TEMPLATE_EDITION_NAMING)
         await state.update_data(
             request_type=Application.RequestType.add_naming)
         await state.update_data(
@@ -217,8 +219,8 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
                                    reply_markup=kb.exit_kb())
         await state.set_state(my_states.UpdateSubObject.select_subobject)
     elif query.data == 'add_materials':
-        path1 = Path(pathlib.Path.cwd(), "добавление_материалов_на_свободный_остаток.docx")
-        path2 = Path(pathlib.Path.cwd(), "добавление_материалов_на_свободный_остаток.xlsx")
+        path1 = Path(pathlib.Path.cwd(), ADD_MATERIALS_DOC)
+        path2 = Path(pathlib.Path.cwd(), ADD_MATERIALS_XLSX)
         await state.update_data(
             request_type=Application.RequestType.add_material)
         await state.update_data(
@@ -229,7 +231,7 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
         await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
         await state.set_state(my_states.AddMat.note)
     elif query.data == 'add_EDO':
-        path = Path(pathlib.Path.cwd(), "Добавление объекта в ЭДО.docx")
+        path = Path(pathlib.Path.cwd(), ADD_OBJECT)
         await state.update_data(request_type=Application.RequestType.add_edo)
         await state.update_data(
             request_answered=Application.RequestAnswered.admin)
@@ -238,7 +240,7 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
         await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
         await state.set_state(my_states.AddObjAdm.note)
     elif query.data == 'open_access':
-        path = Path(pathlib.Path.cwd(), "Открытие доступов в ЭДО для сотрудников.docx")
+        path = Path(pathlib.Path.cwd(), OPEN_ACCESS)
         await state.update_data(request_type=Application.RequestType.open_edo)
         await state.update_data(
             request_answered=Application.RequestAnswered.admin)
@@ -247,7 +249,7 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
         await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
         await state.set_state(my_states.OpenAcs.note)
     elif query.data == 'edit_incorrect_move_admin':
-        path = Path(pathlib.Path.cwd(), "Редактирование некорректного перемещения.docx")
+        path = Path(pathlib.Path.cwd(), EDIT_NOT_CORRECT)
         await state.update_data(
             request_type=Application.RequestType.edit_some_moving)
         await state.update_data(
@@ -257,7 +259,7 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
         await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
         await state.set_state(my_states.EditMoveAdm.note)
     elif query.data == 'edit_shipment':
-        path = Path(pathlib.Path.cwd(), "Корректировка поставок.docx")
+        path = Path(pathlib.Path.cwd(), EDIT_SHIPMENT)
         await state.update_data(
             request_type=Application.RequestType.adjustment_of_supplies)
         await state.update_data(
@@ -267,7 +269,7 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
         await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
         await state.set_state(my_states.EditShpmnt.note)
     elif query.data == 'adjustment_invoice':
-        path = Path(pathlib.Path.cwd(), "Корректировка оформленной накладной.docx")
+        path = Path(pathlib.Path.cwd(), CORR_INV)
         await state.update_data(
             request_type=Application.RequestType.adjustment_invoice)
         await state.update_data(

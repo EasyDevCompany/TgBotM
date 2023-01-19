@@ -5,7 +5,7 @@ from app.loader import bot
 from app.states.base import BaseStates
 from app.states.tgbot_states import AdjInv
 from app.utils import const, get_data
-from app.utils.const import EDIT_DOC_NUMBER, LOAD_DOC, REQUEST_NUMBER, WHAT_EDIT_IN_DOC, EDIT_INFO, FIO, ROLE, R_TYPE
+from app.utils.const import EDIT_DOC_NUMBER, LOAD_DOC, REQUEST_NUMBER, WHAT_EDIT_IN_DOC, EDIT_INFO, FIO, ROLE
 from dependency_injector.wiring import inject, Provide
 from app.services.application import ApplicationService
 from app.core.container import Container
@@ -72,6 +72,7 @@ async def get_description(message: types.Message, state: FSMContext,
         await application.update(data['admin'], obj_in=new_data)
         await message.answer(const.CHANGE_SUCCESS)
         await state.finish()
+
 
 async def correct(query: types.CallbackQuery, state: FSMContext):
     if query.data == '1':

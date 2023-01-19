@@ -6,7 +6,7 @@ from app.states.base import BaseStates
 from app.states.tgbot_states import AddObjAdm
 from app.utils import const, get_data
 from app.utils.const import NAME_OBJECT, LOAD_DOC, TITUL, ERROR_NUMBERS, STORAGE_OBJ, DATA_OBJ, STORAGE_ERROR, \
-    STORAGE_NAME, FIO, ROLE, R_TYPE
+    STORAGE_NAME, FIO, ROLE
 from dependency_injector.wiring import inject, Provide
 from app.services.application import ApplicationService
 from app.core.container import Container

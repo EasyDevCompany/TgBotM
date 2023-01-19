@@ -8,7 +8,7 @@ from app.utils import const, get_data
 from app.utils import const_edit_shpmnt as text
 from app.utils.const import REQUEST_NUMBER, LOAD_DOC, \
     R_NUMBER_ERROR, INCOME_STORAGE, WHAT_EDIT_REQUEST, WHAT_EDIT, FIO, \
-    ROLE, R_TYPE, NUMBER_REQUEST_IF
+    ROLE, NUMBER_REQUEST_IF, ACCEPT_SENDING
 from dependency_injector.wiring import inject, Provide
 from app.services.application import ApplicationService
 from app.core.container import Container
@@ -123,12 +123,12 @@ async def get_extra_files(message: types.Message,
     new_kb = kb.accept().add(kb.send_file_btn)
     if 'field_seven' not in data:
         await state.update_data(field_seven=message.document.file_id)
-        await message.answer('Подтвердите отправку или добавьте ещё файлы',
+        await message.answer(ACCEPT_SENDING,
                              reply_markup=new_kb)
         await state.set_state(EditShpmnt.more_extra)
     else:
         await state.update_data(field_seven=data['field_seven'] + ', ' + message.document.file_id)
-        await message.answer('Подтвердите отправку или добавьте ещё файлы',
+        await message.answer(ACCEPT_SENDING,
                              reply_markup=new_kb)
         await state.set_state(EditShpmnt.more_extra)
 

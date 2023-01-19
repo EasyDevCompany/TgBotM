@@ -5,7 +5,7 @@ from app.loader import bot
 from app.states.base import BaseStates
 from app.states.tgbot_states import AddObj
 from app.utils import const, get_data
-from app.utils.const import EDIT_PART, EDIT_SUBPART, EDIT_SORT, EDIT_SUBSISTEMS, FIO, ROLE, R_TYPE, SECTION_MATERIAL
+from app.utils.const import EDIT_PART, EDIT_SUBPART, EDIT_SORT, EDIT_SUBSISTEMS, FIO, ROLE, SECTION_MATERIAL
 from dependency_injector.wiring import inject, Provide
 from app.services.application import ApplicationService
 from app.core.container import Container

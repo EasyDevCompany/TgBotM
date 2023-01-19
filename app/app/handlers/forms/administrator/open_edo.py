@@ -7,7 +7,7 @@ from app.loader import bot
 from app.states.base import BaseStates
 from app.states.tgbot_states import OpenAcs
 from app.utils import const, get_data
-from app.utils.const import LOAD_DOC, FIO_EMPLOYEE, ACCESS, FIO, ROLE, R_TYPE
+from app.utils.const import LOAD_DOC, FIO_EMPLOYEE, ACCESS, FIO, ROLE
 from dependency_injector.wiring import inject, Provide
 from app.services.application import ApplicationService
 from app.core.container import Container

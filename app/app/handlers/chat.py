@@ -4,6 +4,9 @@ from aiogram.dispatcher.filters import Command
 import app.keyboards.inline_keyboard as kb
 from loader import dp, bot
 from aiogram import types, Dispatcher
+
+from app.handlers.forms.administrator import adjustment_of_supplies, add_edo, open_edo, edit_some_moving
+from app.handlers.forms.moderator import add_material, adjustment_invoice, change_status_application, add_naming
 from app.services.application import ApplicationService
 from dependency_injector.wiring import inject, Provide
 from app.models.application import Application
@@ -13,6 +16,7 @@ from logger import logger
 import app.states.tgbot_states as my_states
 from app.utils import const
 from app.core.container import Container
+from app.utils.const import NO_NEW_BIDS, NEW_COMMENT, SELECT_ITEM, BID_ACCEPT, BID_PROCESSED
 
 
 @inject
@@ -27,7 +31,7 @@ async def admin(message: types.Message,
                 new_tickets.append(ticket)
         await kb.admin_btns_tickets(message=message, tickets=new_tickets)
     except:
-        await message.answer('Нет новых заявок')
+        await message.answer(NO_NEW_BIDS)
 
 
 @inject
@@ -42,7 +46,7 @@ async def moder(message: types.Message,
                 new_tickets.append(ticket)
         await kb.moder_btns_tickets(message=message, tickets=new_tickets)
     except:
-        await message.answer('Нет новых заявок')
+        await message.answer(NO_NEW_BIDS)
 
 
 @inject
@@ -80,7 +84,7 @@ async def comeback(query: types.CallbackQuery, callback_data: dict,
     number = callback_data['id']
     user_id = callback_data['user_id']
     await state.update_data(number=number, user_id=user_id)
-    await query.message.answer('Введите комментарий: ')
+    await query.message.answer(NEW_COMMENT)
     await state.set_state(Admin.comment)
     await query.answer()
 
@@ -110,25 +114,25 @@ async def get_comment(message: types.Message, state: FSMContext,
         msg += f'11){ticket.field_eight}\n'
     if ticket.field_nine is not None:
         msg += f'12){ticket.field_nine}\n'
-    if ticket.request_type == 'Корректировка поставок':
+    if ticket.request_type == adjustment_of_supplies:
         if ticket.field_seven != const.NO_EXTRA:
             await message.answer_document(ticket.field_one)
             logger.info(ticket.field_seven)
             list_ids = ticket.field_seven.split(', ')
             for i in list_ids:
                 await message.answer_document(i)
-    elif ticket.request_type == 'Добавление материалов на свободный остаток':
+    elif ticket.request_type == add_material:
         media = types.MediaGroup()
         media.attach_document(types.InputMediaDocument(ticket.field_one))
         media.attach_document(types.InputMediaDocument(ticket.field_three))
         await bot.send_media_group(admin_data['user_id'], media=media)
-    elif ticket.request_type in ['Корректировка оформленной накладной',
-                                 'Смена статуса заявки',
-                                 'Добавление объекта в ЭДО',
-                                 'Открытие доступов Эдо для сотрудников',
-                                 'Редактирование некорректного перемещения']:
+    elif ticket.request_type in [adjustment_invoice,
+                                 change_status_application,
+                                 add_edo,
+                                 open_edo,
+                                 edit_some_moving]:
         await bot.send_document(admin_data['user_id'], ticket.field_one)
-    elif ticket.request_type == 'Добавление наименований':
+    elif ticket.request_type == add_naming:
         if ticket.field_six != '---':
             await bot.send_document(admin_data['user_id'], ticket.field_six)
     await bot.send_message(admin_data['user_id'],
@@ -188,7 +192,7 @@ async def user_edit_ticket(query: types.CallbackQuery,
         await state.set_state(my_states.AddObj.sure)
     logger.info(await state.get_state())
     await query.message.answer(
-        'Выбери пункт редактирования',
+        SELECT_ITEM,
         reply_markup=kb.another_genmarkup(count_buttons))
     await query.answer()
 
@@ -203,7 +207,7 @@ async def take_to_work(query: types.CallbackQuery,
         number, obj_in={
             'application_status': Application.ApplicationStatus.in_work},
         user_id=query.from_user.id)
-    await bot.send_message(user_id, 'Ваша заявка принята')
+    await bot.send_message(user_id, BID_ACCEPT)
     await query.answer()
 
 
@@ -216,7 +220,7 @@ async def success(query: types.CallbackQuery,
     await application.update(
         number, obj_in={
             'application_status': Application.ApplicationStatus.success})
-    await bot.send_message(user_id, 'Ваша заявка обработана')
+    await bot.send_message(user_id, BID_PROCESSED)
     await query.answer()
 
 
