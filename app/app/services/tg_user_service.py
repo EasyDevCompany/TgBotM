@@ -22,3 +22,9 @@ class TelegramUserService:
         if user is None:
             return False
         return True
+
+    async def check_permission_for_user(self, user_id: int, user_type) -> bool:
+        user = self._repository_telegram_user.get(user_id=user_id, user_type=user_type)
+        if user is None:
+            return False
+        return True

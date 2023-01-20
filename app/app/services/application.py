@@ -37,7 +37,7 @@ class ApplicationService:
             db_obj=self._repository_application.get(id=application_id),
             obj_in=obj_in
         )
-        logger.info(application)
+        return application
 
     async def get_application_for_user(self, user_id: int, application_id: int):
         user = self._repository_telegram_user.get(user_id=user_id)
@@ -45,4 +45,8 @@ class ApplicationService:
         if (application is None) or (user.user_type != application.request_answered):
             return None
         return application
+
+    async def application_for_user(self, user_id: int):
+        user = self._repository_telegram_user.get(user_id=user_id)
+        return self._repository_application.list(sender_user_id=user.id)
 

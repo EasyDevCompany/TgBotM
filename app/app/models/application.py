@@ -53,6 +53,7 @@ class Application(Base):
         pending = "pending"
         success = "success"
         return_application = "return_application"
+        in_work = "Запрос в работе"
 
     id = Column(Integer, primary_key=True, index=True)
     sender_user_id = Column(

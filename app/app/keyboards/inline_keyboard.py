@@ -36,3 +36,16 @@ async def application(application_id: int):
     )
 
     return keyboard
+
+
+async def edit(application_id: int):
+    keyboard = types.InlineKeyboardMarkup(row_width=1)
+    return keyboard.add(
+        types.InlineKeyboardButton(
+            text="Редактировать",
+            callback_data=application_callback.new(
+                data=f"{application_id}",
+                type="edit"
+            )
+        )
+    )

@@ -15,14 +15,41 @@ APPLICATION_ERROR = "Заявка, которую вы пытаетесь рас
 SEND_APPLICATION = "ID заявки: {application_id}\n\n" \
                    "Роль: {role}\n" \
                    "Тип заявки: {request_type}\n"\
-                   "1){one}\n"\
-                   "2){two}\n"\
-                   "3){three}\n"\
-                   "4){four}\n"\
-                   "5){five}\n"\
-                   "6){six}\n"\
-                   "7){seven}\n"\
-                   "8){eight}\n"\
-                   "9){nine}\n"\
+                   "{one}\n"\
+                   "{two}\n"\
+                   "{three}\n"\
+                   "{four}\n"\
+                   "{five}\n"\
+                   "{six}\n"\
+                   "{seven}\n"\
+                   "{eight}\n"\
+                   "{nine}\n"\
 
-STATUS_CHANGE_DONE = "Статус заявки изменен на обработанную!"
+STATUS_CHANGE_DONE = "Статус заявки изменен: {message}"
+MESSAGE_FOR_SENDER = """
+Статус вашей заявки изменен.
+Уникальный id заявки: {application_id}
+Тип заявки: {application_type}
+"""
+RETURN_COMMENT = """
+Напишите комментарий к заявке, чтобы по нему
+пользователь мог изменить заявку.
+"""
+COMMENT_SEND = "Комметарий отправлен!"
+MESSAGE_FOR_SENDER_IF_RETURN = """
+Ваша заявка была возращени для доработки,
+отредактируйте ее, чтобы вернуть ее в работу.
+
+Уникальный ID заявки: {application_id}
+Ваша роль: {role}
+Тип заявки: {request_type}
+{one}
+{two}
+{three}
+{four}
+{five}
+{six}
+{seven}
+{eight}
+{nine}
+"""
