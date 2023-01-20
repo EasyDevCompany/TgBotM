@@ -9,15 +9,13 @@ from app.models.application import Application
 from app.services.application import ApplicationService
 
 from app.models.telegram_user import TelegramUser
-from app.models.application import Application
 from app.services.tg_user_service import TelegramUserService
-from app.services.application import ApplicationService
 
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import CommandStart
 
-from app.utils import const
+from app.utils import const, get_data
 import app.keyboards.inline_keyboard as kb
 from app.loader import bot
 from app.states.base import BaseStates
@@ -51,24 +49,33 @@ async def edit_data(query: types.CallbackQuery, state: FSMContext):
 @inject
 async def send_ticket(query: types.CallbackQuery,
                       state: FSMContext,
-                      application: ApplicationService = Provide[Container.application_service]):
+                      application: ApplicationService = Provide[Container.application_service],
+                      tg_user: TelegramUserService = Provide[Container.telegram_user_service]):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     data = await state.get_data()
     if 'change' in data:
         del data['change']
     if 'message_id' in data:
         del data['message_id']
-    await application.create(
+    ticket = await application.create(
         user_id=query.from_user.id,
         obj_in=data
     )
-    await state.finish()
+    if data['request_answered'] == Application.RequestAnswered.moderator:
+        ids = await tg_user.users_list(user_type='moder')
+        await get_data.send_data_channel(channel='support', ticket=ticket)
+    elif data['request_answered'] == Application.RequestAnswered.admin:
+        ids = await tg_user.users_list(user_type='admin')
+        await get_data.send_data_channel(channel='admin', ticket=ticket)
+    for id in ids:
+        await bot.send_message(id, 'Поступила новая заявка')
     await query.message.answer(
         WAITING_ANSWER)
     await query.message.answer(
         const.START_MESSAGE,
         reply_markup=kb.start_work
     )
+    await state.finish()
 
 
 @inject
@@ -87,52 +94,6 @@ async def test_func(
             "field_four": "test"
         },
         user_id=user_id
-    )
-
-
-
-@dp.callback_query_handler(text='exit', state='*')
-async def cancel(query: types. CallbackQuery, state: FSMContext):
-    await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await state.finish()
-    await query.message.answer(const.START_MESSAGE, reply_markup=kb.start_work)
-    await query.answer()
-
-
-@dp.callback_query_handler(text='edit', state='*')
-async def edit_data(query: types.CallbackQuery, state: FSMContext):
-    await bot.delete_message(query.message.chat.id, query.message.message_id)
-    data = await state.get_data()
-    if 'change' in data:
-        del data['change']
-    elif 'message_id' in data:
-        del data['message_id']
-    await query.message.answer('Выберите номер пункта для корректировки: ',
-                               reply_markup=kb.genmarkup(data=data))
-    await query.answer()
-
-
-@dp.callback_query_handler(text='send', state='*')
-@inject
-async def send_ticket(query: types.CallbackQuery,
-                      state: FSMContext,
-                      application: ApplicationService = Provide[Container.application_service]):
-    await bot.delete_message(query.message.chat.id, query.message.message_id)
-    data = await state.get_data()
-    if 'change' in data:
-        del data['change']
-    if 'message_id' in data:
-        del data['message_id']
-    await application.create(
-        user_id=query.from_user.id,
-        obj_in=data
-    )
-    await state.finish()
-    await query.message.answer(
-        'Ваш запрос отправлен сотруднику, ожидайте ответа')
-    await query.message.answer(
-        const.START_MESSAGE,
-        reply_markup=kb.start_work
     )
 
 

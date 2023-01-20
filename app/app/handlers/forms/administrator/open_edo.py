@@ -1,17 +1,18 @@
 import re
 
-import app.keyboards.inline_keyboard as kb
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
+from dependency_injector.wiring import Provide, inject
+
+import app.keyboards.inline_keyboard as kb
+from app.core.container import Container
 from app.loader import bot
+from app.models.application import Application
+from app.services.application import ApplicationService
 from app.states.base import BaseStates
 from app.states.tgbot_states import OpenAcs
 from app.utils import const, get_data
-from app.utils.const import LOAD_DOC, FIO_EMPLOYEE, ACCESS, FIO, ROLE, R_TYPE
-from dependency_injector.wiring import inject, Provide
-from app.services.application import ApplicationService
-from app.core.container import Container
-from app.models.application import Application
+from app.utils.const import ACCESS, FIO, FIO_EMPLOYEE, LOAD_DOC, R_TYPE, ROLE
 
 
 async def get_note(message: types.Message, state: FSMContext):
@@ -63,6 +64,8 @@ async def get_reason(message: types.Message, state: FSMContext,
             new_data[i] = None
         await application.update(data['admin'], obj_in=new_data)
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -168,6 +171,8 @@ async def edit(message: types.Message, state: FSMContext,
                                      obj_in={'application_status': Application.ApplicationStatus.in_work,
                                              'field_four': data['field_four']})
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -188,6 +193,8 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'role': data['role']})
         await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -202,4 +209,3 @@ def register(dp: Dispatcher):
                                 content_types=['text', 'document'])
     dp.register_callback_query_handler(correct, state=OpenAcs.sure)
     dp.register_callback_query_handler(get_role, state=OpenAcs.edit)
-

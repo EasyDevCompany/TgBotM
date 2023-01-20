@@ -1,4 +1,3 @@
-
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from app.utils import const_add_subobjects as const
 from app.utils import const as main_const
@@ -43,30 +42,11 @@ def another_genmarkup(count):
     return keyboard
 
 
-exit_button = InlineKeyboardButton(text='Отмена', callback_data="exit")
-skip_button = InlineKeyboardButton(text='Пропустить', callback_data='skip')
-
-
-def genmarkup(data):
-    keyboard = InlineKeyboardMarkup()
-    keyboard.row_width = 1
-    for i in range(1, len(data)):
-        keyboard.add(InlineKeyboardButton(i, callback_data=i))
-    return keyboard
-
-
-def another_genmarkup(count):
-    keyboard = InlineKeyboardMarkup()
-    keyboard.row_width = 1
-    for i in range(1, count+1):
-        keyboard.add(InlineKeyboardButton(i, callback_data=i))
-    return keyboard
-
-
 def choose_your_role():
     keyboard = InlineKeyboardMarkup(resize_keyboard=True)
     b1 = InlineKeyboardButton(text='Бухгалтер',
                               callback_data=Application.Role.accountant)
+
     b2 = InlineKeyboardButton(text='Кладовщик',
                               callback_data=Application.Role.storekeeper)
     b3 = InlineKeyboardButton(text='Супервайзер',
@@ -548,3 +528,28 @@ def user_edit(ticket):
                                       user_id=ticket.sender_user_id))
     kb.row(button)
     return kb
+
+
+def in_chnl_kb(ticket):
+    keyboard = InlineKeyboardMarkup()
+    b1 = InlineKeyboardButton(text='Взять в работу',
+                              callback_data=cb_admin.new(
+                                  action='take_to_work',
+                                  id=f'{ticket.id}',
+                                  user_id=f'{ticket.sender_user.user_id}'
+                                ))
+    b2 = InlineKeyboardButton(
+        text='Вернуть сотруднику для корректировки запроса',
+        callback_data=cb_admin.new(
+            action='comeback',
+            id=f'{ticket.id}',
+            user_id=f'{ticket.sender_user.user_id}'))
+    b3 = InlineKeyboardButton(
+        text='Запрос обработан',
+        callback_data=cb_admin.new(action='success',
+                                   id=f'{ticket.id}',
+                                   user_id=f'{ticket.sender_user.user_id}'))
+    keyboard.row(b1)
+    keyboard.row(b2)
+    keyboard.row(b3)
+    return keyboard

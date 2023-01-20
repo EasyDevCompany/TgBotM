@@ -1,16 +1,18 @@
-import app.keyboards.inline_keyboard as kb
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
+from dependency_injector.wiring import Provide, inject
+from logger import logger
+
+import app.keyboards.inline_keyboard as kb
+from app.core.container import Container
 from app.loader import bot
+from app.models.application import Application
+from app.services.application import ApplicationService
 from app.states.base import BaseStates
 from app.states.tgbot_states import ChangeStatus
 from app.utils import const, get_data
-from app.utils.const import NUMBER_BID, LOAD_DOC, EDIT_STATUS, FIO, ROLE, R_TYPE
-from dependency_injector.wiring import inject, Provide
-from app.services.application import ApplicationService
-from app.core.container import Container
-from app.models.application import Application
-from logger import logger
+from app.utils.const import (EDIT_STATUS, FIO, LOAD_DOC, NUMBER_BID, R_TYPE,
+                             ROLE)
 
 
 async def get_note(message: types.Message, state: FSMContext):
@@ -55,6 +57,8 @@ async def get_status_in_bid(message: types.Message, state: FSMContext,
         logger.info(new_data)
         await application.update(data['admin'], obj_in=new_data)
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
         await state.finish()
 
 
@@ -148,6 +152,8 @@ async def edit(message: types.Message, state: FSMContext,
                                      obj_in={'application_status': Application.ApplicationStatus.in_work,
                                              'field_three': data['field_three']})
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
         await state.finish()
 
 
@@ -168,6 +174,8 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'role': data['role']})
         await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
         await state.finish()
 
 

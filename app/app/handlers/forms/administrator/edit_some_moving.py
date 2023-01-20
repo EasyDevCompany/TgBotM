@@ -1,16 +1,19 @@
-import app.keyboards.inline_keyboard as kb
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
+from dependency_injector.wiring import Provide, inject
+
+import app.keyboards.inline_keyboard as kb
+from app.core.container import Container
 from app.loader import bot
+from app.models.application import Application
+from app.services.application import ApplicationService
 from app.states.base import BaseStates
 from app.states.tgbot_states import EditMoveAdm
 from app.utils import const, get_data
-from app.utils.const import NUMBER_REQUEST_IF, LOAD_DOC, INVOICE_NUMBER, R_NUMBER_ERROR, OUTGOING_STORAGE, \
-    OUTGOING_STORAGE_INCOME, STATUS_GOING, REASON, FIO, ROLE, R_TYPE, INPUT_REASON
-from dependency_injector.wiring import inject, Provide
-from app.services.application import ApplicationService
-from app.core.container import Container
-from app.models.application import Application
+from app.utils.const import (FIO, INPUT_REASON, INVOICE_NUMBER, LOAD_DOC,
+                             NUMBER_REQUEST_IF, OUTGOING_STORAGE,
+                             OUTGOING_STORAGE_INCOME, R_NUMBER_ERROR, R_TYPE,
+                             REASON, ROLE, STATUS_GOING)
 
 
 async def get_note(message: types.Message, state: FSMContext):
@@ -97,6 +100,8 @@ async def get_another_reason(message: types.Message, state: FSMContext,
         await application.update(data['admin'], obj_in={'application_status': Application.ApplicationStatus.in_work,
                                                         'field_seven': message.text})
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -119,6 +124,8 @@ async def get_description(message: types.Message, state: FSMContext,
             new_data[i] = None
         await application.update(data['admin'], obj_in=new_data)
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -269,6 +276,8 @@ async def edit(message: types.Message, state: FSMContext,
                                      obj_in={'application_status': Application.ApplicationStatus.in_work,
                                              'field_eight': data['field_eight']})
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -289,6 +298,8 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'role': data['role']})
         await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -308,6 +319,8 @@ async def get_status_edit(query: types.CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'field_six': data['field_six']})
         await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -340,6 +353,8 @@ async def get_reason_edit(query: types.CallbackQuery, state: FSMContext,
                                      obj_in={'application_status': Application.ApplicationStatus.in_work,
                                              'field_seven': data['field_seven']})
             await query.message.answer(const.CHANGE_SUCCESS)
+            ticket = await application.get(data['admin'])
+            await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
             await state.finish()
         else:
             await bot.delete_message(query.message.chat.id,

@@ -1,17 +1,19 @@
-import app.keyboards.inline_keyboard as kb
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
+from dependency_injector.wiring import Provide, inject
+from loguru import logger
+
+import app.keyboards.inline_keyboard as kb
+from app.core.container import Container
 from app.loader import bot, dp
+from app.models.application import Application
+from app.services.application import ApplicationService
 from app.states.base import BaseStates
 from app.states.tgbot_states import AddObjAdm
 from app.utils import const, get_data
-from app.utils.const import NAME_OBJECT, LOAD_DOC, TITUL, ERROR_NUMBERS, STORAGE_OBJ, DATA_OBJ, STORAGE_ERROR, \
-    STORAGE_NAME, FIO, ROLE, R_TYPE
-from dependency_injector.wiring import inject, Provide
-from app.services.application import ApplicationService
-from app.core.container import Container
-from app.models.application import Application
-from loguru import logger
+from app.utils.const import (DATA_OBJ, ERROR_NUMBERS, FIO, LOAD_DOC,
+                             NAME_OBJECT, R_TYPE, ROLE, STORAGE_ERROR,
+                             STORAGE_NAME, STORAGE_OBJ, TITUL)
 
 
 async def get_note(message: types.Message, state: FSMContext):
@@ -84,6 +86,8 @@ async def get_storage(message: types.Message, state: FSMContext,
                     logger.info(new_data)
                     await application.update(data['admin'], obj_in=new_data)
                     await message.answer(const.CHANGE_SUCCESS)
+                    ticket = await application.get(data['admin'])
+                    await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
                     await state.finish()
                 else:
                     await application.update(data['admin'],
@@ -91,6 +95,8 @@ async def get_storage(message: types.Message, state: FSMContext,
                                                     'field_four': data['field_four'],
                                                     'field_five': data['field_five']})
                     await message.answer(const.CHANGE_SUCCESS)
+                    ticket = await application.get(data['admin'])
+                    await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
                     await state.finish()
         else:
             await message.answer(STORAGE_ERROR)
@@ -214,6 +220,8 @@ async def edit(message: types.Message, state: FSMContext,
                                      obj_in={'application_status': Application.ApplicationStatus.in_work,
                                              'field_five': data['field_five']})
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -234,6 +242,8 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'role': data['role']})
         await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 

@@ -1,17 +1,19 @@
-from aiogram.dispatcher.filters import Command
-import app.keyboards.inline_keyboard as kb
-from loader import dp, bot
-from aiogram import types, Dispatcher
-from app.services.application import ApplicationService
-from dependency_injector.wiring import inject, Provide
-from app.models.application import Application
-from app.states.base import Admin
+from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
-from app.utils import const
+from aiogram.dispatcher.filters import Command
+from dependency_injector.wiring import Provide, inject
+from loader import bot
 from logger import logger
+
+import app.keyboards.inline_keyboard as kb
 import app.states.tgbot_states as my_states
-from app.utils import const
+from app.core.config import settings
 from app.core.container import Container
+from app.models.application import Application
+from app.services.application import ApplicationService
+from app.services.tg_user_service import TelegramUserService
+from app.states.base import Admin
+from app.utils import const, get_data
 
 
 @inject
@@ -22,7 +24,7 @@ async def admin(message: types.Message,
             Application.RequestAnswered.admin)
         new_tickets = []
         for ticket in tickets:
-            if ticket.application_status != Application.ApplicationStatus.success:
+            if ticket.application_status != Application.ApplicationStatus.success and str(ticket.recipient_user.user_id) == str(message.from_user.id):
                 new_tickets.append(ticket)
         await kb.admin_btns_tickets(message=message, tickets=new_tickets)
     except:
@@ -37,8 +39,9 @@ async def moder(message: types.Message,
             Application.RequestAnswered.moderator)
         new_tickets = []
         for ticket in tickets:
-            if ticket.application_status != Application.ApplicationStatus.success:
-                new_tickets.append(ticket)
+            if ticket.recipient_user is not None:
+                if ticket.application_status != Application.ApplicationStatus.success and str(ticket.recipient_user.user_id) == str(message.from_user.id):
+                    new_tickets.append(ticket)
         await kb.moder_btns_tickets(message=message, tickets=new_tickets)
     except:
         await message.answer('Нет новых заявок')
@@ -52,8 +55,9 @@ async def admin_page_callback(call: types.CallbackQuery,
         Application.RequestAnswered.admin)
     new_tickets = []
     for ticket in tickets:
-        if ticket.application_status != Application.ApplicationStatus.success:
-            new_tickets.append(ticket)
+        if ticket.recipient_user is not None:
+            if ticket.application_status != Application.ApplicationStatus.success and str(ticket.recipient_user.user_id) == str(call.from_user.id):
+                new_tickets.append(ticket)
     await kb.admin_btns_tickets(call.message, new_tickets, page)
     await bot.delete_message(call.message.chat.id, call.message.message_id)
     await call.answer()
@@ -67,72 +71,42 @@ async def moder_page_callback(call: types.CallbackQuery,
         Application.RequestAnswered.moderator)
     new_tickets = []
     for ticket in tickets:
-        if ticket.application_status != Application.ApplicationStatus.success:
-            new_tickets.append(ticket)
+        if ticket.recipient_user is not None:
+            if ticket.application_status != Application.ApplicationStatus.success and str(ticket.recipient_user.user_id) == str(call.from_user.id):
+                new_tickets.append(ticket)
     await kb.moder_btns_tickets(call.message, new_tickets, page)
     await bot.delete_message(call.message.chat.id, call.message.message_id)
     await call.answer()
 
 
+@inject
 async def comeback(query: types.CallbackQuery, callback_data: dict,
-                   state: FSMContext):
+                   state: FSMContext,
+                   application: ApplicationService = Provide[Container.application_service]):
     number = callback_data['id']
     user_id = callback_data['user_id']
+    await application.update(number,
+                             user_id=query.from_user.id,
+                             obj_in={'application_status': Application.ApplicationStatus.return_application})
     await state.update_data(number=number, user_id=user_id)
-    await query.message.answer('Введите комментарий: ')
-    await state.set_state(Admin.comment)
+    if str(query.message.chat.id) == str(settings.ADMIN_CHAT_ID) or str(query.message.chat.id) == str(settings.SUPPORT_CHAT_ID):
+        await bot.delete_message(query.message.chat.id, query.message.message_id)
+        ticket = await application.get(number)
+        await get_data.send_data_channel(ticket=ticket, user_id=query.from_user.id, state=state)
+    else:
+        await query.message.answer('Введите комментарий: ')
+        await state.set_state(Admin.comment)
     await query.answer()
 
 
 @inject
-async def get_comment(message: types.Message, state: FSMContext,
+async def get_comment(message: types.Message,
+                      state: FSMContext,
                       application: ApplicationService = Provide[Container.application_service]):
     admin_data = await state.get_data()
     ticket = await application.get(admin_data['number'])
-    msg = ''
-    msg += f'1){ticket.name}\n'
-    msg += f'2){ticket.role}\n'
-    msg += f'3){ticket.request_type}\n'
-    msg += f'4){ticket.field_one}\n'
-    msg += f'5){ticket.field_two}\n'
-    if ticket.field_three is not None:
-        msg += f'6){ticket.field_three}\n'
-    if ticket.field_four is not None:
-        msg += f'7){ticket.field_four}\n'
-    if ticket.field_five is not None:
-        msg += f'8){ticket.field_five}\n'
-    if ticket.field_six is not None:
-        msg += f'9){ticket.field_six}\n'
-    if ticket.field_seven is not None:
-        msg += f'10){ticket.field_seven}\n'
-    if ticket.field_eight is not None:
-        msg += f'11){ticket.field_eight}\n'
-    if ticket.field_nine is not None:
-        msg += f'12){ticket.field_nine}\n'
-    if ticket.request_type == 'Корректировка поставок':
-        if ticket.field_seven != const.NO_EXTRA:
-            await message.answer_document(ticket.field_one)
-            logger.info(ticket.field_seven)
-            list_ids = ticket.field_seven.split(', ')
-            for i in list_ids:
-                await message.answer_document(i)
-    elif ticket.request_type == 'Добавление материалов на свободный остаток':
-        media = types.MediaGroup()
-        media.attach_document(types.InputMediaDocument(ticket.field_one))
-        media.attach_document(types.InputMediaDocument(ticket.field_three))
-        await bot.send_media_group(admin_data['user_id'], media=media)
-    elif ticket.request_type in ['Корректировка оформленной накладной',
-                                 'Смена статуса заявки',
-                                 'Добавление объекта в ЭДО',
-                                 'Открытие доступов Эдо для сотрудников',
-                                 'Редактирование некорректного перемещения']:
-        await bot.send_document(admin_data['user_id'], ticket.field_one)
-    elif ticket.request_type == 'Добавление наименований':
-        if ticket.field_six != '---':
-            await bot.send_document(admin_data['user_id'], ticket.field_six)
-    await bot.send_message(admin_data['user_id'],
-                           msg, reply_markup=kb.user_edit(ticket))
     await bot.send_message(admin_data['user_id'], message.text)
+    await get_data.send_data_channel(ticket=ticket, user_id=admin_data['user_id'], edit=True, state=state)
     await state.finish()
 
 
@@ -141,6 +115,7 @@ async def user_edit_ticket(query: types.CallbackQuery,
                            state: FSMContext,
                            callback_data: dict,
                            application: ApplicationService = Provide[Container.application_service]):
+    await state.finish()
     number = callback_data['id']
     await application.update(
         number, obj_in={
@@ -154,7 +129,8 @@ async def user_edit_ticket(query: types.CallbackQuery,
                      '_sa_instance_state',
                      'sender_user_id',
                      'sender_user',
-                     'recipient_user_id'] and v is not None:
+                     'recipient_user_id',
+                     'recipient_user'] and v is not None:
             count_buttons += 1
     await state.update_data(admin=number)
     if ticket.request_type == 'Добавление объекта в ЭДО':
@@ -196,6 +172,7 @@ async def user_edit_ticket(query: types.CallbackQuery,
 async def take_to_work(query: types.CallbackQuery,
                        callback_data: dict,
                        application: ApplicationService = Provide[Container.application_service]):
+    await bot.delete_message(query.message.chat.id, query.message.message_id)
     number = callback_data['id']
     user_id = callback_data['user_id']
     await application.update(
@@ -210,6 +187,7 @@ async def take_to_work(query: types.CallbackQuery,
 async def success(query: types.CallbackQuery,
                   callback_data: dict,
                   application: ApplicationService = Provide[Container.application_service]):
+    await bot.delete_message(query.message.chat.id, query.message.message_id)
     number = callback_data['id']
     user_id = callback_data['user_id']
     await application.update(
@@ -223,7 +201,7 @@ def register_chat_handler(dp: Dispatcher):
     dp.register_message_handler(admin, Command('admin'))
     dp.register_message_handler(get_comment, state=Admin.comment)
     dp.register_callback_query_handler(comeback, kb.cb_admin.filter(action='comeback'))
-    dp.register_callback_query_handler(admin_page_callback, lambda call: call.data.split('#')[0]=='ticket')
+    dp.register_callback_query_handler(admin_page_callback, lambda call: call.data.split('#')[0] == 'ticket')
     dp.register_callback_query_handler(moder_page_callback, lambda call: call.data.split('#')[0] == 'moderticket')
     dp.register_callback_query_handler(user_edit_ticket, kb.cb_admin.filter(action='edit'))
     dp.register_callback_query_handler(take_to_work, kb.cb_admin.filter(action='take_to_work'))

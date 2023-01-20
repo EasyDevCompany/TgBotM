@@ -1,19 +1,21 @@
-import app.keyboards.inline_keyboard as kb
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
+from dependency_injector.wiring import Provide, inject
+from logger import logger
+
+import app.keyboards.inline_keyboard as kb
+from app.core.container import Container
 from app.loader import bot
+from app.models.application import Application
+from app.services.application import ApplicationService
 from app.states.base import BaseStates
 from app.states.tgbot_states import EditShpmnt
-from app.utils import const, get_data
+from app.utils import const
 from app.utils import const_edit_shpmnt as text
-from app.utils.const import REQUEST_NUMBER, LOAD_DOC, \
-    R_NUMBER_ERROR, INCOME_STORAGE, WHAT_EDIT_REQUEST, WHAT_EDIT, FIO, \
-    ROLE, R_TYPE, NUMBER_REQUEST_IF
-from dependency_injector.wiring import inject, Provide
-from app.services.application import ApplicationService
-from app.core.container import Container
-from logger import logger
-from app.models.application import Application
+from app.utils import get_data
+from app.utils.const import (FIO, INCOME_STORAGE, LOAD_DOC, NUMBER_REQUEST_IF,
+                             R_NUMBER_ERROR, R_TYPE, REQUEST_NUMBER, ROLE,
+                             WHAT_EDIT, WHAT_EDIT_REQUEST)
 
 
 @inject
@@ -32,6 +34,8 @@ async def skip(query: types. CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'field_seven': const.NO_EXTRA})
         await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -102,6 +106,7 @@ async def get_another_changes(message: types.Message, state: FSMContext,
             new_kb = kb.sure().add(kb.exit_button)
             await message.answer(const.SURE, reply_markup=new_kb)
             await state.set_state(EditShpmnt.sure)
+
     else:
         await application.update(data['admin'], obj_in={'application_status': Application.ApplicationStatus.in_work,
                                                         'field_five': message.text})
@@ -157,11 +162,15 @@ async def more_extra(query: types.CallbackQuery,
                 logger.info(new_data)
                 await application.update(data['admin'], obj_in=new_data)
                 await query.message.answer(const.CHANGE_SUCCESS)
+                ticket = await application.get(data['admin'])
+                await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
                 await state.finish()
             else:
                 await application.update(data['admin'], obj_in={'application_status': Application.ApplicationStatus.in_work,
                                                                 'field_seven': data['field_seven']})
                 await query.message.answer(const.CHANGE_SUCCESS)
+                ticket = await application.get(data['admin'])
+                await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
                 await state.finish()
         await query.answer()
 
@@ -290,6 +299,8 @@ async def edit(message: types.Message, state: FSMContext,
                                      obj_in={'application_status': Application.ApplicationStatus.in_work,
                                              'field_six': data['field_six']})
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -309,45 +320,49 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'role': data['role']})
         await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
 @inject
 async def get_changes_edit(query: types.CallbackQuery, state: FSMContext,
                                application: ApplicationService = Provide[Container.application_service]):
-        data = await state.get_data()
-        if 'admin' not in data:
-            if query.data != 'Другое':
-                await state.update_data(field_five=query.data)
-                await bot.delete_message(query.message.chat.id,
-                                         query.message.message_id)
-                await get_data.send_data(query=query, state=state)
-                new_kb = kb.sure().add(kb.exit_button)
-                await query.message.answer(const.SURE, reply_markup=new_kb)
-                await state.set_state(EditShpmnt.sure)
-            else:
-                await bot.delete_message(
-                    query.message.chat.id, query.message.message_id)
-                await query.message.answer(WHAT_EDIT,
-                                           reply_markup=kb.exit_kb())
-                await state.set_state(EditShpmnt.another_what_edit)
+    data = await state.get_data()
+    if 'admin' not in data:
+        if query.data != 'Другое':
+            await state.update_data(field_five=query.data)
+            await bot.delete_message(query.message.chat.id,
+                                        query.message.message_id)
+            await get_data.send_data(query=query, state=state)
+            new_kb = kb.sure().add(kb.exit_button)
+            await query.message.answer(const.SURE, reply_markup=new_kb)
+            await state.set_state(EditShpmnt.sure)
         else:
-            if query.data != 'Другое':
-                await state.update_data(field_five=query.data)
-                await bot.delete_message(query.message.chat.id,
-                                         query.message.message_id)
-                data = await state.get_data()
-                await application.update(data['admin'],
-                                         obj_in={'application_status': Application.ApplicationStatus.in_work,
-                                                 'field_five': data['field_five']})
-                await query.message.answer(const.CHANGE_SUCCESS)
-                await state.finish()
-            else:
-                await bot.delete_message(
-                    query.message.chat.id, query.message.message_id)
-                await query.message.answer(WHAT_EDIT,
-                                           reply_markup=kb.exit_kb())
-                await state.set_state(EditShpmnt.another_what_edit)
+            await bot.delete_message(
+                query.message.chat.id, query.message.message_id)
+            await query.message.answer(WHAT_EDIT,
+                                        reply_markup=kb.exit_kb())
+            await state.set_state(EditShpmnt.another_what_edit)
+    else:
+        if query.data != 'Другое':
+            await state.update_data(field_five=query.data)
+            await bot.delete_message(query.message.chat.id,
+                                        query.message.message_id)
+            data = await state.get_data()
+            await application.update(data['admin'],
+                                        obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                                'field_five': data['field_five']})
+            await query.message.answer(const.CHANGE_SUCCESS)
+            ticket = await application.get(data['admin'])
+            await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
+            await state.finish()
+        else:
+            await bot.delete_message(
+                query.message.chat.id, query.message.message_id)
+            await query.message.answer(WHAT_EDIT,
+                                        reply_markup=kb.exit_kb())
+            await state.set_state(EditShpmnt.another_what_edit)
 
 
 def register(dp: Dispatcher):

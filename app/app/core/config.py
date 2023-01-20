@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
 
     BOT_TOKEN: str
+    ADMIN_CHAT_ID: str
+    SUPPORT_CHAT_ID: str
 
     SYNC_SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
 

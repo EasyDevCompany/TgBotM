@@ -1,19 +1,21 @@
 import re
 
-import app.keyboards.inline_keyboard as kb
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
+from dependency_injector.wiring import Provide, inject
+from loguru import logger
+
+import app.keyboards.inline_keyboard as kb
+from app.core.container import Container
 from app.loader import bot
+from app.models.application import Application
+from app.services.application import ApplicationService
 from app.states.base import BaseStates
 from app.states.tgbot_states import UpdateStorage
 from app.utils import const, get_data
-from app.utils.const import EDIT_NEW_STORAGE, REQUEST_NUMBER, EDIT_CONTACT_NAME, EDIT_ADDRESS, ERROR_CONTACT, \
-    ADDRESS_ERROR, FIO, ROLE, R_TYPE
-from dependency_injector.wiring import inject, Provide
-from app.services.application import ApplicationService
-from app.core.container import Container
-from app.models.application import Application
-from loguru import logger
+from app.utils.const import (ADDRESS_ERROR, EDIT_ADDRESS, EDIT_CONTACT_NAME,
+                             EDIT_NEW_STORAGE, ERROR_CONTACT, FIO, R_TYPE,
+                             REQUEST_NUMBER, ROLE)
 
 
 async def get_number_bid(message: types.Message, state: FSMContext):
@@ -69,6 +71,8 @@ async def get_address(message: types.Message, state: FSMContext,
             logger.info(new_data)
             await application.update(data['admin'], obj_in=new_data)
             await message.answer(const.CHANGE_SUCCESS)
+            ticket = await application.get(data['admin'])
+            await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
             await state.finish()
     else:
         await message.answer(ADDRESS_ERROR)
@@ -178,6 +182,8 @@ async def edit(message: types.Message, state: FSMContext,
                                      obj_in={'application_status': Application.ApplicationStatus.in_work,
                                              'field_four': data['field_four']})
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
         await state.finish()
 
 
@@ -198,129 +204,8 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'role': data['role']})
         await query.message.answer(const.CHANGE_SUCCESS)
-        await state.finish()
-
-
-@dp.callback_query_handler(state=UpdateStorage.sure)
-async def correct(query: types.CallbackQuery, state: FSMContext):
-    if query.data == '1':
-        await bot.delete_message(
-            query.message.chat.id, query.message.message_id)
-        await state.update_data(change='name')
-        await query.message.answer('Введите ФИО', reply_markup=kb.exit_kb())
-        await state.set_state(UpdateStorage.edit)
-    elif query.data == '2':
-        await bot.delete_message(
-            query.message.chat.id, query.message.message_id)
-        await state.update_data(change='role')
-        new_kb = kb.choose_your_role().add(kb.exit_button)
-        await query.message.answer('Выберите свою роль',
-                                   reply_markup=new_kb)
-        await state.set_state(UpdateStorage.edit)
-    elif query.data == '3':
-        await bot.delete_message(
-            query.message.chat.id, query.message.message_id)
-        await state.update_data(change='request_type')
-        new_kb = kb.main_kb().add(kb.exit_button)
-        await query.message.answer('Выберите тип запроса',
-                                   reply_markup=new_kb)
-        await state.set_state(BaseStates.request_type)
-    elif query.data == '4':
-        await bot.delete_message(
-            query.message.chat.id, query.message.message_id)
-        await state.update_data(change='number_bid')
-        await query.message.answer(
-            const.NUMBER_BID, reply_markup=kb.exit_kb())
-        await state.set_state(UpdateStorage.edit)
-    elif query.data == '5':
-        await bot.delete_message(
-            query.message.chat.id, query.message.message_id)
-        await state.update_data(change='new_storage')
-        await query.message.answer('Укажите новый склад доставки',
-                                   reply_markup=kb.exit_kb())
-        await state.set_state(UpdateStorage.edit)
-    elif query.data == '6':
-        await bot.delete_message(
-            query.message.chat.id, query.message.message_id)
-        await state.update_data(change='contact_fio')
-        await query.message.answer('Укажите контактное лицо (Ф.И.О.)',
-                                   reply_markup=kb.exit_kb())
-        await state.set_state(UpdateStorage.edit)
-    elif query.data == '7':
-        await bot.delete_message(
-            query.message.chat.id, query.message.message_id)
-        await state.update_data(change='address')
-        await query.message.answer(
-            'Укажите адрес актуального склада (на который нужно поменять)',
-            reply_markup=kb.exit_kb())
-        await state.set_state(UpdateStorage.edit)
-    await query.answer()
-
-
-@inject
-async def edit(message: types.Message, state: FSMContext,
-               application: ApplicationService = Provide[Container.application_service]):
-    data = await state.get_data()
-    point = data['change']
-    if point == 'name':
-        await state.update_data(name=message.text)
-    elif point == 'number_bid':
-        await state.update_data(field_one=message.text)
-    elif point == 'new_storage':
-        await state.update_data(field_two=message.text)
-    elif point == 'contact_fio':
-        await state.update_data(field_three=message.text)
-    elif point == 'address':
-        await state.update_data(field_four=message.text)
-    data = await state.get_data()
-    if 'admin' not in data:
-        await get_data.send_data(message=message, state=state)
-        new_kb = kb.sure().add(kb.exit_button)
-        await message.answer(const.SURE, reply_markup=new_kb)
-        await state.set_state(UpdateStorage.sure)
-    else:
-        if 'name' in data:
-            await application.update(data['admin'],
-                                     obj_in={'application_status': Application.ApplicationStatus.in_work,
-                                             'name': data['name']})
-        elif 'field_one' in data:
-            await application.update(data['admin'],
-                                     obj_in={'application_status': Application.ApplicationStatus.in_work,
-                                             'field_one': data['field_one']})
-        elif 'field_two' in data:
-            await application.update(data['admin'],
-                                     obj_in={'application_status': Application.ApplicationStatus.in_work,
-                                             'field_two': data['field_two']})
-        elif 'field_three' in data:
-            await application.update(data['admin'],
-                                     obj_in={'application_status': Application.ApplicationStatus.in_work,
-                                             'field_three': data['field_three']})
-        elif 'field_four' in data:
-            await application.update(data['admin'],
-                                     obj_in={'application_status': Application.ApplicationStatus.in_work,
-                                             'field_four': data['field_four']})
-        await message.answer(const.CHANGE_SUCCESS)
-        await state.finish()
-
-
-@dp.callback_query_handler(state=UpdateStorage.edit)
-@inject
-async def get_role(query: types.CallbackQuery, state: FSMContext,
-                   application: ApplicationService = Provide[Container.application_service]):
-    await bot.delete_message(query.message.chat.id, query.message.message_id)
-    await state.update_data(role=query.data)
-    data = await state.get_data()
-    if 'admin' not in data:
-        await get_data.send_data(query=query, state=state)
-        new_kb = kb.sure().add(kb.exit_button)
-        await query.message.answer(const.SURE,
-                                   reply_markup=new_kb)
-        await state.set_state(UpdateStorage.sure)
-    else:
-        await application.update(data['admin'],
-                                 obj_in={'application_status': Application.ApplicationStatus.in_work,
-                                         'role': data['role']})
-        await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
         await state.finish()
 
 

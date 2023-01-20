@@ -1,17 +1,16 @@
-from aiogram.utils import executor
-from aiogram import Dispatcher
-
-from loader import dp, bot
-
-from app.core.container import Container
-from app import middlewares
-from app.models.telegram_user import TelegramUser
-from app.models.application import Application
-from app.models.user import User
-
-from app.handlers import start, chat
-import handlers.forms.moderator as moderator
 import handlers.forms.administrator as administrator
+import handlers.forms.moderator as moderator
+from aiogram import Dispatcher
+from aiogram.utils import executor
+from loader import bot, dp
+
+from app import middlewares
+from app.core.container import Container
+from app.handlers import chat, start
+from app.models.application import Application
+from app.models.telegram_user import TelegramUser
+from app.models.user import User
+from app.utils import get_data
 
 start.register_start_handler(dp=dp)
 chat.register_chat_handler(dp=dp)
@@ -54,5 +53,6 @@ if __name__ == "__main__":
                             moderator.conversion_factor,
                             moderator.edit_subobject,
                             moderator.edit_view_job,
-                            moderator.update_storage])
+                            moderator.update_storage,
+                            get_data])
     executor.start_polling(dp, skip_updates=True)
