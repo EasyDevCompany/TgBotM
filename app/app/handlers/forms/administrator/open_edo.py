@@ -15,13 +15,16 @@ from app.models.application import Application
 
 
 async def get_note(message: types.Message, state: FSMContext):
-    if message.content_type == 'document':
-        await state.update_data(field_one=message.document.file_id)
-        await message.answer(FIO_EMPLOYEE, reply_markup=kb.exit_kb())
-        await state.set_state(OpenAcs.staff_name)
-    else:
+    if message.content_type != 'document' and message.content_type != 'photo':
         await message.answer(LOAD_DOC)
         await state.set_state(OpenAcs.note)
+    else:
+        if message.content_type == 'document':
+            await state.update_data(field_one=message.document.file_id)
+        elif message.content_type == 'photo':
+            await state.update_data(field_one=message.photo[0].file_id)
+        await message.answer(FIO_EMPLOYEE, reply_markup=kb.exit_kb())
+        await state.set_state(OpenAcs.staff_name)
 
 
 async def get_name(message: types.Message, state: FSMContext):
@@ -63,6 +66,8 @@ async def get_reason(message: types.Message, state: FSMContext,
             new_data[i] = None
         await application.update(data['admin'], obj_in=new_data)
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -133,7 +138,10 @@ async def edit(message: types.Message, state: FSMContext,
     if point == 'name':
         await state.update_data(name=message.text)
     elif point == 'note':
-        await state.update_data(field_one=message.document.file_id)
+        try:
+            await state.update_data(field_one=message.photo[0].file_id)
+        except:
+            await state.update_data(field_one=message.document.file_id)
     elif point == 'staff_name':
         await state.update_data(field_two=message.text)
     elif point == 'what_acs':
@@ -168,6 +176,8 @@ async def edit(message: types.Message, state: FSMContext,
                                      obj_in={'application_status': Application.ApplicationStatus.in_work,
                                              'field_four': data['field_four']})
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -188,6 +198,8 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'role': data['role']})
         await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -199,7 +211,7 @@ def register(dp: Dispatcher):
     dp.register_message_handler(get_reason, state=OpenAcs.for_what)
     dp.register_message_handler(edit,
                                 state=OpenAcs.edit,
-                                content_types=['text', 'document'])
+                                content_types=['any'])
     dp.register_callback_query_handler(correct, state=OpenAcs.sure)
     dp.register_callback_query_handler(get_role, state=OpenAcs.edit)
 

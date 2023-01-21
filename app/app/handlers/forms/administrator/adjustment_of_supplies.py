@@ -32,17 +32,22 @@ async def skip(query: types. CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'field_seven': const.NO_EXTRA})
         await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
 async def get_note(message: types.Message, state: FSMContext):
-    if message.content_type == 'document':
-        await state.update_data(field_one=message.document.file_id)
-        await message.answer(REQUEST_NUMBER, reply_markup=kb.exit_kb())
-        await state.set_state(EditShpmnt.number_ticket)
-    else:
+    if message.content_type != 'document' and message.content_type != 'photo':
         await message.answer(LOAD_DOC)
         await state.set_state(EditShpmnt.note)
+    else:
+        if message.content_type == 'document':
+            await state.update_data(field_one=message.document.file_id)
+        elif message.content_type == 'photo':
+            await state.update_data(field_one=message.photo[0].file_id)
+        await message.answer(REQUEST_NUMBER, reply_markup=kb.exit_kb())
+        await state.set_state(EditShpmnt.number_ticket)
 
 
 async def get_ticket(message: types.Message, state: FSMContext):
@@ -122,12 +127,18 @@ async def get_extra_files(message: types.Message,
     data = await state.get_data()
     new_kb = kb.accept().add(kb.send_file_btn)
     if 'field_seven' not in data:
-        await state.update_data(field_seven=message.document.file_id)
+        try:
+            await state.update_data(field_seven=message.photo[0].file_id)
+        except:
+            await state.update_data(field_seven=message.document.file_id)
         await message.answer(ACCEPT_SENDING,
                              reply_markup=new_kb)
         await state.set_state(EditShpmnt.more_extra)
     else:
-        await state.update_data(field_seven=data['field_seven'] + ', ' + message.document.file_id)
+        try:
+            await state.update_data(field_seven=data['field_seven'] + ', ' + message.photo[0].file_id)
+        except:
+            await state.update_data(field_seven=data['field_seven'] + ', ' + message.document.file_id)
         await message.answer(ACCEPT_SENDING,
                              reply_markup=new_kb)
         await state.set_state(EditShpmnt.more_extra)
@@ -158,13 +169,17 @@ async def more_extra(query: types.CallbackQuery,
                 logger.info(new_data)
                 await application.update(data['admin'], obj_in=new_data)
                 await query.message.answer(const.CHANGE_SUCCESS)
+                ticket = await application.get(data['admin'])
+                await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
                 await state.finish()
             else:
                 await application.update(data['admin'], obj_in={'application_status': Application.ApplicationStatus.in_work,
                                                                 'field_seven': data['field_seven']})
                 await query.message.answer(const.CHANGE_SUCCESS)
+                ticket = await application.get(data['admin'])
+                await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
                 await state.finish()
-        await query.answer()
+    await query.answer()
 
 
 async def correct(query: types.CallbackQuery, state: FSMContext):
@@ -250,7 +265,10 @@ async def edit(message: types.Message, state: FSMContext,
     if point == 'name':
         await state.update_data(name=message.text)
     elif point == 'note':
-        await state.update_data(field_one=message.document.file_id)
+        try:
+            await state.update_data(field_one=message.photo[0].file_id)
+        except:
+            await state.update_data(field_one=message.document.file_id)
     elif point == 'number_ticket':
         await state.update_data(field_two=message.text)
     elif point == 'number_invoice':
@@ -291,6 +309,8 @@ async def edit(message: types.Message, state: FSMContext,
                                      obj_in={'application_status': Application.ApplicationStatus.in_work,
                                              'field_six': data['field_six']})
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -310,45 +330,49 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'role': data['role']})
         await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
 @inject
 async def get_changes_edit(query: types.CallbackQuery, state: FSMContext,
                                application: ApplicationService = Provide[Container.application_service]):
-        data = await state.get_data()
-        if 'admin' not in data:
-            if query.data != 'Другое':
-                await state.update_data(field_five=query.data)
-                await bot.delete_message(query.message.chat.id,
-                                         query.message.message_id)
-                await get_data.send_data(query=query, state=state)
-                new_kb = kb.sure().add(kb.exit_button)
-                await query.message.answer(const.SURE, reply_markup=new_kb)
-                await state.set_state(EditShpmnt.sure)
-            else:
-                await bot.delete_message(
-                    query.message.chat.id, query.message.message_id)
-                await query.message.answer(WHAT_EDIT,
-                                           reply_markup=kb.exit_kb())
-                await state.set_state(EditShpmnt.another_what_edit)
+    data = await state.get_data()
+    if 'admin' not in data:
+        if query.data != 'Другое':
+            await state.update_data(field_five=query.data)
+            await bot.delete_message(query.message.chat.id,
+                                     query.message.message_id)
+            await get_data.send_data(query=query, state=state)
+            new_kb = kb.sure().add(kb.exit_button)
+            await query.message.answer(const.SURE, reply_markup=new_kb)
+            await state.set_state(EditShpmnt.sure)
         else:
-            if query.data != 'Другое':
-                await state.update_data(field_five=query.data)
-                await bot.delete_message(query.message.chat.id,
-                                         query.message.message_id)
-                data = await state.get_data()
-                await application.update(data['admin'],
-                                         obj_in={'application_status': Application.ApplicationStatus.in_work,
-                                                 'field_five': data['field_five']})
-                await query.message.answer(const.CHANGE_SUCCESS)
-                await state.finish()
-            else:
-                await bot.delete_message(
-                    query.message.chat.id, query.message.message_id)
-                await query.message.answer(WHAT_EDIT,
-                                           reply_markup=kb.exit_kb())
-                await state.set_state(EditShpmnt.another_what_edit)
+            await bot.delete_message(
+                query.message.chat.id, query.message.message_id)
+            await query.message.answer(WHAT_EDIT,
+                                        reply_markup=kb.exit_kb())
+            await state.set_state(EditShpmnt.another_what_edit)
+    else:
+        if query.data != 'Другое':
+            await state.update_data(field_five=query.data)
+            await bot.delete_message(query.message.chat.id,
+                                        query.message.message_id)
+            data = await state.get_data()
+            await application.update(data['admin'],
+                                        obj_in={'application_status': Application.ApplicationStatus.in_work,
+                                                'field_five': data['field_five']})
+            await query.message.answer(const.CHANGE_SUCCESS)
+            ticket = await application.get(data['admin'])
+            await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
+            await state.finish()
+        else:
+            await bot.delete_message(
+                query.message.chat.id, query.message.message_id)
+            await query.message.answer(WHAT_EDIT,
+                                        reply_markup=kb.exit_kb())
+            await state.set_state(EditShpmnt.another_what_edit)
 
 
 def register(dp: Dispatcher):
@@ -365,7 +389,7 @@ def register(dp: Dispatcher):
         state=EditShpmnt.extra_files, content_types=['any'])
     dp.register_message_handler(edit,
                                 state=EditShpmnt.edit,
-                                content_types=['text', 'document'])
+                                content_types=['any'])
     dp.register_callback_query_handler(skip, text='skip', state=EditShpmnt.extra_files)
     dp.register_callback_query_handler(get_changes, state=EditShpmnt.what_edit)
     dp.register_callback_query_handler(correct, state=EditShpmnt.sure)

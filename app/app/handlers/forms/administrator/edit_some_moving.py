@@ -14,13 +14,16 @@ from app.models.application import Application
 
 
 async def get_note(message: types.Message, state: FSMContext):
-    if message.content_type == 'document':
-        await state.update_data(field_one=message.document.file_id)
-        await message.answer(NUMBER_REQUEST_IF, reply_markup=kb.exit_kb())
-        await state.set_state(EditMoveAdm.number_ticket)
-    else:
+    if message.content_type != 'document' and message.content_type != 'photo':
         await message.answer(LOAD_DOC)
         await state.set_state(EditMoveAdm.note)
+    else:
+        if message.content_type == 'document':
+            await state.update_data(field_one=message.document.file_id)
+        elif message.content_type == 'photo':
+            await state.update_data(field_one=message.photo[0].file_id)
+        await message.answer(NUMBER_REQUEST_IF, reply_markup=kb.exit_kb())
+        await state.set_state(EditMoveAdm.number_ticket)
 
 
 async def get_ticket(message: types.Message, state: FSMContext):
@@ -97,6 +100,8 @@ async def get_another_reason(message: types.Message, state: FSMContext,
         await application.update(data['admin'], obj_in={'application_status': Application.ApplicationStatus.in_work,
                                                         'field_seven': message.text})
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -119,6 +124,8 @@ async def get_description(message: types.Message, state: FSMContext,
             new_data[i] = None
         await application.update(data['admin'], obj_in=new_data)
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -221,7 +228,10 @@ async def edit(message: types.Message, state: FSMContext,
     if point == 'name':
         await state.update_data(name=message.text)
     elif point == 'note':
-        await state.update_data(field_one=message.document.file_id)
+        try:
+            await state.update_data(field_one=message.photo[0].file_id)
+        except:
+            await state.update_data(field_one=message.document.file_id)
     elif point == 'number_ticket':
         await state.update_data(field_two=message.text)
     elif point == 'number_invoice':
@@ -269,6 +279,8 @@ async def edit(message: types.Message, state: FSMContext,
                                      obj_in={'application_status': Application.ApplicationStatus.in_work,
                                              'field_eight': data['field_eight']})
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -289,6 +301,8 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'role': data['role']})
         await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -308,6 +322,8 @@ async def get_status_edit(query: types.CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'field_six': data['field_six']})
         await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -340,6 +356,8 @@ async def get_reason_edit(query: types.CallbackQuery, state: FSMContext,
                                      obj_in={'application_status': Application.ApplicationStatus.in_work,
                                              'field_seven': data['field_seven']})
             await query.message.answer(const.CHANGE_SUCCESS)
+            ticket = await application.get(data['admin'])
+            await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
             await state.finish()
         else:
             await bot.delete_message(query.message.chat.id,
@@ -362,7 +380,7 @@ def register(dp: Dispatcher):
     dp.register_message_handler(get_description, state=EditMoveAdm.description)
     dp.register_message_handler(edit,
                                 state=EditMoveAdm.edit,
-                                content_types=['text', 'document'])
+                                content_types=['any'])
     dp.register_callback_query_handler(get_status, state=EditMoveAdm.status)
     dp.register_callback_query_handler(get_reason, state=EditMoveAdm.reason)
     dp.register_callback_query_handler(correct, state=EditMoveAdm.sure)

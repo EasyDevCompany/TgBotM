@@ -5,8 +5,10 @@ from app.loader import bot, dp
 from app.states.base import BaseStates
 from app.states.tgbot_states import AddObjAdm
 from app.utils import const, get_data
+from dependency_injector.wiring import Provide, inject
+from app.core.container import Container
 from app.utils.const import NAME_OBJECT, LOAD_DOC, TITUL, ERROR_NUMBERS, STORAGE_OBJ, DATA_OBJ, STORAGE_ERROR, \
-    STORAGE_NAME, FIO, ROLE
+    STORAGE_NAME, FIO, ROLE, USER_EDIT_TICKET
 from dependency_injector.wiring import inject, Provide
 from app.services.application import ApplicationService
 from app.core.container import Container
@@ -15,14 +17,14 @@ from loguru import logger
 
 
 async def get_note(message: types.Message, state: FSMContext):
-    if message.content_type == 'document':
-        await state.update_data(field_one=message.document.file_id)
-        await message.answer(NAME_OBJECT,
-                             reply_markup=kb.exit_kb())
-        await state.set_state(AddObjAdm.obj_name)
-    else:
+    if message.content_type != 'document' or message.content_type != 'photo':
         await message.answer(LOAD_DOC)
         await state.set_state(AddObjAdm.note)
+    else:
+        if message.content_type == 'document':
+            await state.update_data(field_one=message.document.file_id)
+        elif message.content_type == 'photo':
+            await state.update_data(field_one=message.photo[0].file_id)
 
 
 async def get_obj_name(message: types.Message, state: FSMContext):
@@ -84,6 +86,8 @@ async def get_storage(message: types.Message, state: FSMContext,
                     logger.info(new_data)
                     await application.update(data['admin'], obj_in=new_data)
                     await message.answer(const.CHANGE_SUCCESS)
+                    ticket = await application.get(data['admin'])
+                    await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
                     await state.finish()
                 else:
                     await application.update(data['admin'],
@@ -91,6 +95,8 @@ async def get_storage(message: types.Message, state: FSMContext,
                                                     'field_four': data['field_four'],
                                                     'field_five': data['field_five']})
                     await message.answer(const.CHANGE_SUCCESS)
+                    ticket = await application.get(data['admin'])
+                    await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
                     await state.finish()
         else:
             await message.answer(STORAGE_ERROR)
@@ -174,7 +180,10 @@ async def edit(message: types.Message, state: FSMContext,
     if point == 'name':
         await state.update_data(name=message.text)
     elif point == 'note':
-        await state.update_data(field_one=message.document.file_id)
+        try:
+            await state.update_data(field_one=message.photo[0].file_id)
+        except:
+            await state.update_data(field_one=message.document.file_id)
     elif point == 'obj_name':
         await state.update_data(field_two=message.text)
     elif point == 'title':
@@ -234,6 +243,8 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'role': data['role']})
         await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №А{ticket.id}')
         await state.finish()
 
 
@@ -247,5 +258,5 @@ def register(dp: Dispatcher):
     dp.register_message_handler(get_storage, state=AddObjAdm.storage, content_types=['any'])
     dp.register_message_handler(edit,
                                 state=AddObjAdm.edit,
-                                content_types=['text', 'document'])
+                                content_types=['any'])
     dp.register_callback_query_handler(get_role, state=AddObjAdm.edit)

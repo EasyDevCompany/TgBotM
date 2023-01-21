@@ -14,14 +14,17 @@ from logger import logger
 
 
 async def get_note(message: types.Message, state: FSMContext):
-    if message.content_type == 'document':
-        await state.update_data(field_one=message.document.file_id)
+    if message.content_type != 'document' and message.content_type != 'photo':
+        await message.answer(LOAD_DOC)
+        await state.set_state(ChangeStatus.note)
+    else:
+        if message.content_type == 'document':
+            await state.update_data(field_one=message.document.file_id)
+        elif message.content_type == 'photo':
+            await state.update_data(field_one=message.photo[0].file_id)
         await message.answer(NUMBER_BID,
                              reply_markup=kb.exit_kb())
         await state.set_state(ChangeStatus.number_bid)
-    else:
-        await message.answer(LOAD_DOC)
-        await state.set_state(ChangeStatus.note)
 
 
 async def get_number_bid(message: types.Message, state: FSMContext):
@@ -55,6 +58,8 @@ async def get_status_in_bid(message: types.Message, state: FSMContext,
         logger.info(new_data)
         await application.update(data['admin'], obj_in=new_data)
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
         await state.finish()
 
 
@@ -119,7 +124,10 @@ async def edit(message: types.Message, state: FSMContext,
     if point == 'name':
         await state.update_data(name=message.text)
     elif point == 'note':
-        await state.update_data(field_one=message.document.file_id)
+        try:
+            await state.update_data(field_one=message.photo[0].file_id)
+        except:
+            await state.update_data(field_one=message.document.file_id)
     elif point == 'number':
         await state.update_data(field_two=message.text)
     elif point == 'status':
@@ -148,6 +156,8 @@ async def edit(message: types.Message, state: FSMContext,
                                      obj_in={'application_status': Application.ApplicationStatus.in_work,
                                              'field_three': data['field_three']})
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
         await state.finish()
 
 
@@ -168,6 +178,8 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'role': data['role']})
         await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
         await state.finish()
 
 
@@ -180,5 +192,5 @@ def register(dp: Dispatcher):
                                 state=ChangeStatus.status_in_bid)
     dp.register_callback_query_handler(correct, state=ChangeStatus.sure)
     dp.register_message_handler(edit, state=ChangeStatus.edit,
-                                content_types=['text', 'document'])
+                                content_types=['any'])
     dp.register_callback_query_handler(get_role, state=ChangeStatus.edit)

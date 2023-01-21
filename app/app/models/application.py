@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import enum
 
 from app.db.base_class import Base
@@ -13,6 +11,9 @@ from sqlalchemy import (
     ForeignKey
 )
 from sqlalchemy.orm import relationship
+
+
+from app.models.telegram_user import UserType
 
 
 class Application(Base):
@@ -32,11 +33,7 @@ class Application(Base):
         account_approve = "Утверждающий счета"  # Утверждающий счета
         project_manager = "Руководитель отдела"  # Руководитель оотдела
         head_of_the_administrative_and_economic_department = "Начальник Адм.Хоз Упр."
-        # ачальник Административно Хозяйственного управления
-
-    class RequestAnswered(str, enum.Enum):
-        admin = "admin"
-        moderator = "moderator"
+        # Начальник Административно Хозяйственного управления
 
     class RequestType(str, enum.Enum):
         change_status_application = "Смена статуса заявки"  # смена статуса заявки
@@ -75,7 +72,7 @@ class Application(Base):
     name = Column(String(300))
     role = Column(Enum(Role))
     application_status = Column(Enum(ApplicationStatus), default=ApplicationStatus.pending)
-    request_answered = Column(Enum(RequestAnswered))
+    request_answered = Column(Enum(UserType))
     request_type = Column(Enum(RequestType))
     field_one = Column(String(300))
     field_two = Column(String(300))

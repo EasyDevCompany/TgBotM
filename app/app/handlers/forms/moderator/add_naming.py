@@ -30,6 +30,8 @@ async def skip(query: types. CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'field_six': '---'})
         await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
         await state.finish()
 
 
@@ -71,8 +73,14 @@ async def get_unit_of_measureament(message: types.Message, state: FSMContext):
 @inject
 async def get_add_several_naming(message: types.Message, state: FSMContext,
                                  application: ApplicationService = Provide[Container.application_service]):
-    if message.content_type == 'document':
-        await state.update_data(field_six=message.document.file_id)
+    if message.content_type != 'document' and message.content_type != 'photo':
+        await message.answer(LOAD_OR_MISS)
+        await state.set_state(AddNaming.add_several_naming)
+    else:
+        if message.content_type == 'document':
+            await state.update_data(field_six=message.document.file_id)
+        elif message.content_type == 'photo':
+            await state.update_data(field_six=message.photo[0].file_id)
         data = await state.get_data()
         if 'admin' not in data:
             await get_data.send_data(message=message, state=state)
@@ -88,10 +96,9 @@ async def get_add_several_naming(message: types.Message, state: FSMContext,
             logger.info(new_data)
             await application.update(data['admin'], obj_in=new_data)
             await message.answer(const.CHANGE_SUCCESS)
+            ticket = await application.get(data['admin'])
+            await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
             await state.finish()
-    else:
-        await message.answer(LOAD_OR_MISS)
-        await state.set_state(AddNaming.add_several_naming)
 
 
 async def correct(query: types.CallbackQuery, state: FSMContext):
@@ -185,7 +192,10 @@ async def edit(message: types.Message, state: FSMContext,
     elif point == 'unit_of_measureament':
         await state.update_data(field_five=message.text)
     elif point == 'several_naming':
-        await state.update_data(field_six=message.document.file_id)
+        try:
+            await state.update_data(field_six=message.photo[0].file_id)
+        except:
+            await state.update_data(field_six=message.document.file_id)
     data = await state.get_data()
     if 'admin' not in data:
         await get_data.send_data(message=message, state=state)
@@ -222,6 +232,8 @@ async def edit(message: types.Message, state: FSMContext,
                                      obj_in={'application_status': Application.ApplicationStatus.in_work,
                                              'field_six': data['field_six']})
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
         await state.finish()
 
 
@@ -243,6 +255,8 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'role': data['role']})
         await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
         await state.finish()
 
 
@@ -263,7 +277,7 @@ def register(dp: Dispatcher):
                                 content_types=['any'])
     dp.register_message_handler(edit,
                                 state=AddNaming.edit,
-                                content_types=['text', 'document'])
+                                content_types=['any'])
     dp.register_callback_query_handler(skip, state=[AddNaming.add_several_naming,
                                                     AddNaming.edit])
     dp.register_callback_query_handler(correct, state=AddNaming.sure)
