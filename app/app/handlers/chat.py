@@ -19,16 +19,17 @@ from app.utils import const, get_data
 @inject
 async def admin(message: types.Message,
                 application: ApplicationService = Provide[Container.application_service]):
-    try:
-        tickets = await application.applications_for(
-            Application.RequestAnswered.admin)
-        new_tickets = []
-        for ticket in tickets:
+    # try:
+    tickets = await application.applications_for(
+        Application.RequestAnswered.admin)
+    new_tickets = []
+    for ticket in tickets:
+        if ticket.recipient_user is not None:
             if ticket.application_status != Application.ApplicationStatus.success and str(ticket.recipient_user.user_id) == str(message.from_user.id):
                 new_tickets.append(ticket)
-        await kb.admin_btns_tickets(message=message, tickets=new_tickets)
-    except:
-        await message.answer('Нет новых заявок')
+    await kb.admin_btns_tickets(message=message, tickets=new_tickets)
+    # except:
+    #     await message.answer('Нет новых заявок')
 
 
 @inject

@@ -17,14 +17,17 @@ from app.utils.const import (DATA_OBJ, ERROR_NUMBERS, FIO, LOAD_DOC,
 
 
 async def get_note(message: types.Message, state: FSMContext):
-    if message.content_type == 'document':
-        await state.update_data(field_one=message.document.file_id)
+    if message.content_type != 'document' or message.content_type != 'photo':
+        await message.answer(LOAD_DOC)
+        await state.set_state(AddObjAdm.note)
+    else:
+        if message.content_type == 'document':
+            await state.update_data(field_one=message.document.file_id)
+        elif message.content_type == 'photo':
+            await state.update_data(field_one=message.photo[0].file_id)
         await message.answer(NAME_OBJECT,
                              reply_markup=kb.exit_kb())
         await state.set_state(AddObjAdm.obj_name)
-    else:
-        await message.answer(LOAD_DOC)
-        await state.set_state(AddObjAdm.note)
 
 
 async def get_obj_name(message: types.Message, state: FSMContext):
@@ -180,7 +183,10 @@ async def edit(message: types.Message, state: FSMContext,
     if point == 'name':
         await state.update_data(name=message.text)
     elif point == 'note':
-        await state.update_data(field_one=message.document.file_id)
+        try:
+            await state.update_data(field_one=message.photo[0].file_id)
+        except:
+            await state.update_data(field_one=message.document.file_id)
     elif point == 'obj_name':
         await state.update_data(field_two=message.text)
     elif point == 'title':
@@ -257,5 +263,5 @@ def register(dp: Dispatcher):
     dp.register_message_handler(get_storage, state=AddObjAdm.storage, content_types=['any'])
     dp.register_message_handler(edit,
                                 state=AddObjAdm.edit,
-                                content_types=['text', 'document'])
+                                content_types=['any'])
     dp.register_callback_query_handler(get_role, state=AddObjAdm.edit)

@@ -15,14 +15,17 @@ from app.utils.const import (EDIT_STORAGE, EXCEL_DOC, FIO, LOAD_DOC,
 
 
 async def get_note(message: types.Message, state: FSMContext):
-    if message.content_type == 'document':
-        await state.update_data(field_one=message.document.file_id)
+    if message.content_type != 'document' and message.content_type != 'photo':
+        await message.answer(LOAD_DOC)
+        await state.set_state(AddMat.note)
+    else:
+        if message.content_type == 'document':
+            await state.update_data(field_one=message.document.file_id)
+        elif message.content_type == 'photo':
+            await state.update_data(field_one=message.photo[0].file_id)
         await message.answer(EDIT_STORAGE,
                              reply_markup=kb.exit_kb())
         await state.set_state(AddMat.storage)
-    else:
-        await message.answer(LOAD_DOC)
-        await state.set_state(AddMat.note)
 
 
 async def get_storage(message: types.Message, state: FSMContext):
@@ -33,14 +36,17 @@ async def get_storage(message: types.Message, state: FSMContext):
 
 
 async def get_excel(message: types.Message, state: FSMContext):
-    if message.content_type == 'document':
-        await state.update_data(field_three=message.document.file_id)
+    if message.content_type != 'document' and message.content_type != 'photo':
+        await message.answer(LOAD_DOC)
+        await state.set_state(AddMat.excel)
+    else:
+        if message.content_type == 'document':
+            await state.update_data(field_three=message.document.file_id)
+        elif message.content_type == 'photo':
+            await state.update_data(field_three=message.photo[0].file_id)
         new_kb = kb.reserve_or_leave().add(kb.exit_button)
         await message.answer(SURPLUS, reply_markup=new_kb)
         await state.set_state(AddMat.myc)
-    else:
-        await message.answer(LOAD_EXCEL)
-        await state.set_state(AddMat.excel)
 
 
 @inject
@@ -179,11 +185,17 @@ async def edit(message: types.Message, state: FSMContext,
     if point == 'name':
         await state.update_data(name=message.text)
     elif point == 'note':
-        await state.update_data(field_one=message.document.file_id)
+        try:
+            await state.update_data(field_one=message.photo[0].file_id)
+        except:
+            await state.update_data(field_one=message.document.file_id)
     elif point == 'storage':
         await state.update_data(field_two=message.text)
     elif point == 'excel':
-        await state.update_data(field_three=message.document.file_id)
+        try:
+            await state.update_data(field_three=message.photo[0].file_id)
+        except:
+            await state.update_data(field_three=message.document.file_id)
     elif point == 'obj':
         await state.update_data(field_five=message.text)
     data = await state.get_data()
@@ -254,7 +266,7 @@ def register(dp: Dispatcher):
     dp.register_message_handler(get_obj, state=AddMat.obj)
     dp.register_message_handler(edit,
                                 state=AddMat.edit,
-                                content_types=['text', 'document'])
+                                content_types=['any'])
     dp.register_callback_query_handler(get_choise, state=AddMat.myc)
     dp.register_callback_query_handler(correct, state=AddMat.sure)
     dp.register_callback_query_handler(get_role, state=AddMat.edit)

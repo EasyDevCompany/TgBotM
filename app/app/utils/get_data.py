@@ -33,21 +33,37 @@ async def send_data(state, query=None, message=None):
                                     'Добавление объекта в ЭДО',
                                     "Открытие доступов Эдо для сотрудников",
                                     'Редактирование некорректного перемещения']:
-            await query.message.answer_document(data['field_one'])
+            try:
+                await query.message.answer_photo(data['field_one'])
+            except:
+                await query.message.answer_document(data['field_one'])
         elif data['request_type'] == 'Добавление материалов на свободный остаток':
-            media = types.MediaGroup()
-            media.attach_document(types.InputMediaDocument(data['field_one']))
-            media.attach_document(types.InputMediaDocument(data['field_three']))
-            await query.message.answer_media_group(media=media)
+            try:
+                await query.message.answer_photo(data['field_one'])
+            except:
+                await query.message.answer_document(data['field_one'])
+            try:
+                await query.message.answer_photo(data['field_three'])
+            except:
+                await query.message.answer_document(data['field_three'])
         elif data['request_type'] == 'Добавление наименований':
             if data['field_six'] != '---':
-                await query.message.answer_document(data['field_six'])
+                try:
+                    await query.message.answer_photo(data['field_six'])
+                except:
+                    await query.message.answer_document(data['field_six'])
         elif data['request_type'] == 'Корректировка поставок':
             if data['field_seven'] != const.NO_EXTRA:
-                await query.message.answer_document(data['field_one'])
+                try:
+                    await query.message.answer_photo(data['field_one'])
+                except:
+                    await query.message.answer_document(data['field_one'])
                 list_ids = data['field_seven'].split(', ')
                 for i in list_ids:
-                    await query.message.answer_document(i)
+                    try:
+                        await query.message.answer_photo(i)
+                    except:
+                        await query.message.answer_document(i)
         await query.message.answer(msg)
     else:
         if data['request_type'] in ['Смена статуса заявки',
@@ -55,21 +71,37 @@ async def send_data(state, query=None, message=None):
                                     'Добавление объекта в ЭДО',
                                     "Открытие доступов Эдо для сотрудников",
                                     'Редактирование некорректного перемещения']:
-            await message.answer_document(data['field_one'])
+            try:
+                await message.answer_photo(data['field_one'])
+            except:
+                await message.answer_document(data['field_one'])
         elif data['request_type'] == 'Добавление материалов на свободный остаток':
-            media = types.MediaGroup()
-            media.attach_document(types.InputMediaDocument(data['field_one']))
-            media.attach_document(types.InputMediaDocument(data['field_three']))
-            await message.answer_media_group(media=media)
+            try:
+                await message.answer_photo(data['field_one'])
+            except:
+                await message.answer_document(data['field_one'])
+            try:
+                await message.answer_photo(data['field_three'])
+            except:
+                await message.answer_document(data['field_three'])
         elif data['request_type'] == 'Добавление наименований':
             if data['field_six'] != '---':
-                await message.answer_document(data['field_six'])
+                try:
+                    await message.answer_photo(data['field_six'])
+                except:
+                    await message.answer_document(data['field_six'])
         elif data['request_type'] == 'Корректировка поставок':
             if data['field_seven'] != const.NO_EXTRA:
-                await message.answer_document(data['field_one'])
+                try:
+                    await message.answer_photo(data['field_one'])
+                except:
+                    await message.answer_document(data['field_one'])
                 list_ids = data['field_seven'].split(', ')
                 for i in list_ids:
-                    await message.answer_document(i)
+                    try:
+                        await message.answer_photo(i)
+                    except:
+                        await message.answer_document(i)
         await message.answer(msg)
 
 
@@ -101,42 +133,83 @@ async def send_data_channel(channel=None, ticket=None, user_id = None, state=Non
     if ticket.request_type == 'Корректировка поставок':
         if ticket.field_seven != const.NO_EXTRA:
             if user_id is not None:
-                await bot.send_document(user_id, ticket.field_one)
+                try:
+                    await bot.send_photo(user_id, ticket.field_one)
+                except:
+                    await bot.send_document(user_id, ticket.field_one)
                 list_ids = ticket.field_seven.split(', ')
                 for i in list_ids:
-                    await bot.send_document(user_id, i)
+                    try:
+                        await bot.send_photo(user_id, i)
+                    except:
+                        await bot.send_document(user_id, i)
             else:
-                await bot.send_document(settings.ADMIN_CHAT_ID, ticket.field_one)
+                try:
+                    await bot.send_photo(settings.ADMIN_CHAT_ID, ticket.field_one)
+                except:
+                    await bot.send_document(settings.ADMIN_CHAT_ID, ticket.field_one)
                 list_ids = ticket.field_seven.split(', ')
                 for i in list_ids:
-                    await bot.send_document(settings.ADMIN_CHAT_ID, i)
+                    try:
+                        await bot.send_photo(settings.ADMIN_CHAT_ID, i)
+                    except:
+                        await bot.send_document(settings.ADMIN_CHAT_ID, i)
     elif ticket.request_type == 'Добавление материалов на свободный остаток':
-        media = types.MediaGroup()
-        media.attach_document(types.InputMediaDocument(ticket.field_one))
-        media.attach_document(types.InputMediaDocument(ticket.field_three))
         if user_id is not None:
-            await bot.send_media_group(user_id, media=media)
+            try:
+                await bot.send_photo(user_id, ticket.field_one)
+            except:
+                await bot.send_document(user_id, ticket.field_one)
+            try:
+                await bot.send_photo(user_id, ticket.field_three)
+            except:
+                await bot.send_document(user_id, ticket.field_three)
         else:
-            await bot.send_media_group(settings.SUPPORT_CHAT_ID, media=media)
+            try:
+                await bot.send_photo(settings.SUPPORT_CHAT_ID, ticket.field_one)
+            except:
+                await bot.send_document(settings.SUPPORT_CHAT_ID, ticket.field_one)
+            try:
+                await bot.send_photo(settings.SUPPORT_CHAT_ID, ticket.field_three)
+            except:
+                await bot.send_document(settings.SUPPORT_CHAT_ID, ticket.field_three)
     elif ticket.request_type in ['Добавление объекта в ЭДО',
                                  'Открытие доступов Эдо для сотрудников',
                                  'Редактирование некорректного перемещения']:
         if user_id is not None:
-            await bot.send_document(user_id, ticket.field_one)
+            try:
+                await bot.send_photo(user_id, ticket.field_one)
+            except:
+                await bot.send_document(user_id, ticket.field_one)
         else:
-            await bot.send_document(settings.ADMIN_CHAT_ID, ticket.field_one)
+            try:
+                await bot.send_photo(settings.ADMIN_CHAT_ID, ticket.field_one)
+            except:
+                await bot.send_document(settings.ADMIN_CHAT_ID, ticket.field_one)
     elif ticket.request_type in ['Корректировка оформленной накладной',
                                  'Смена статуса заявки']:
         if user_id is not None:
-            await bot.send_document(user_id, ticket.field_one)
+            try:
+                await bot.send_photo(user_id, ticket.field_one)
+            except:
+                await bot.send_document(user_id, ticket.field_one)
         else:
-            await bot.send_document(settings.SUPPORT_CHAT_ID, ticket.field_one)
+            try:
+                await bot.send_photo(settings.SUPPORT_CHAT_ID, ticket.field_one)
+            except:
+                await bot.send_document(settings.SUPPORT_CHAT_ID, ticket.field_one)
     elif ticket.request_type == 'Добавление наименований':
         if ticket.field_six != '---':
             if user_id is not None:
-                await bot.send_document(user_id, ticket.field_six)
+                try:
+                    await bot.send_photo(user_id, ticket.field_six)
+                except:
+                    await bot.send_document(user_id, ticket.field_six)
             else:
-                await bot.send_document(settings.SUPPORT_CHAT_ID, ticket.field_six)
+                try:
+                    await bot.send_photo(settings.SUPPORT_CHAT_ID, ticket.field_six)
+                except:
+                    await bot.send_document(settings.SUPPORT_CHAT_ID, ticket.field_six)
     if user_id is not None:
         if edit:
             await state.finish()

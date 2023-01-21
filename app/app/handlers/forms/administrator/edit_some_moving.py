@@ -17,13 +17,16 @@ from app.utils.const import (FIO, INPUT_REASON, INVOICE_NUMBER, LOAD_DOC,
 
 
 async def get_note(message: types.Message, state: FSMContext):
-    if message.content_type == 'document':
-        await state.update_data(field_one=message.document.file_id)
-        await message.answer(NUMBER_REQUEST_IF, reply_markup=kb.exit_kb())
-        await state.set_state(EditMoveAdm.number_ticket)
-    else:
+    if message.content_type != 'document' and message.content_type != 'photo':
         await message.answer(LOAD_DOC)
         await state.set_state(EditMoveAdm.note)
+    else:
+        if message.content_type == 'document':
+            await state.update_data(field_one=message.document.file_id)
+        elif message.content_type == 'photo':
+            await state.update_data(field_one=message.photo[0].file_id)
+        await message.answer(NUMBER_REQUEST_IF, reply_markup=kb.exit_kb())
+        await state.set_state(EditMoveAdm.number_ticket)
 
 
 async def get_ticket(message: types.Message, state: FSMContext):
@@ -228,7 +231,10 @@ async def edit(message: types.Message, state: FSMContext,
     if point == 'name':
         await state.update_data(name=message.text)
     elif point == 'note':
-        await state.update_data(field_one=message.document.file_id)
+        try:
+            await state.update_data(field_one=message.photo[0].file_id)
+        except:
+            await state.update_data(field_one=message.document.file_id)
     elif point == 'number_ticket':
         await state.update_data(field_two=message.text)
     elif point == 'number_invoice':
@@ -377,7 +383,7 @@ def register(dp: Dispatcher):
     dp.register_message_handler(get_description, state=EditMoveAdm.description)
     dp.register_message_handler(edit,
                                 state=EditMoveAdm.edit,
-                                content_types=['text', 'document'])
+                                content_types=['any'])
     dp.register_callback_query_handler(get_status, state=EditMoveAdm.status)
     dp.register_callback_query_handler(get_reason, state=EditMoveAdm.reason)
     dp.register_callback_query_handler(correct, state=EditMoveAdm.sure)

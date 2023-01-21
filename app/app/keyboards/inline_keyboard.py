@@ -453,13 +453,21 @@ async def admin_btns_tickets(message, tickets, page=1):
         msg += f'12){tickets[page - 1].field_nine}\n'
     if tickets[page - 1].request_type == 'Корректировка поставок':
         if tickets[page - 1].field_seven != main_const.NO_EXTRA:
-            logger.info(tickets[page-1].field_seven)
-            await message.answer_document(tickets[page-1].field_one)
+            try:
+                await message.answer_photo(tickets[page-1].field_one)
+            except:
+                await message.answer_document(tickets[page-1].field_one)
             list_ids = tickets[page-1].field_seven.split(', ')
             for i in list_ids:
-                await message.answer_document(i)
+                try:
+                    await message.answer_photo(i)
+                except:
+                    await message.answer_document(i)
     else:
-        await message.answer_document(tickets[page - 1].field_one)
+        try:
+            await message.answer_photo(tickets[page - 1].field_one)
+        except:
+            await message.answer_document(tickets[page - 1].field_one)
     await message.answer(msg, reply_markup=kb.markup)
 
 
@@ -506,16 +514,26 @@ async def moder_btns_tickets(message, tickets, page=1):
     if tickets[page - 1].field_nine is not None:
         msg += f'12){tickets[page - 1].field_nine}\n'
     if tickets[page - 1].request_type == 'Добавление материалов на свободный остаток':
-        media = types.MediaGroup()
-        media.attach_document(types.InputMediaDocument(tickets[page - 1].field_one))
-        media.attach_document(types.InputMediaDocument(tickets[page - 1].field_three))
-        await message.answer_media_group(media=media)
+        try:
+            await message.answer_photo(tickets[page - 1].field_one)
+        except:
+            await message.answer_document(tickets[page - 1].field_one)
+        try:
+            await message.answer_photo(tickets[page - 1].field_three)
+        except:
+            await message.answer_document(tickets[page - 1].field_three)
     elif tickets[page - 1].request_type in ['Корректировка оформленной накладной',
                                             'Смена статуса заявки', ]:
-        await message.answer_document(tickets[page - 1].field_one)
+        try:
+            await message.answer_photo(tickets[page - 1].field_one)
+        except:
+            await message.answer_document(tickets[page - 1].field_one)
     elif tickets[page - 1].request_type == 'Добавление наименований':
         if tickets[page - 1].field_six != '---':
-            await message.answer_document(tickets[page - 1].field_six)
+            try:
+                await message.answer_photo(tickets[page - 1].field_six)
+            except:
+                await message.answer_document(tickets[page - 1].field_six)
     await message.answer(msg, reply_markup=kb.markup)
 
 
