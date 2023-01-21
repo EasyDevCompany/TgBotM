@@ -32,12 +32,15 @@ class ApplicationService:
             request_answered=roles
         )
 
-    async def update(self, application_id: int, obj_in: dict):
-        application = self._repository_application.update(
+    async def update(self, application_id: int, obj_in: dict, user_id: int = None):
+        if user_id is not None:
+            user = self._repository_telegram_user.get(user_id=user_id)
+            obj_in['recipient_user_id'] = user.id
+            obj_in['recipient_user'] = user
+        return self._repository_application.update(
             db_obj=self._repository_application.get(id=application_id),
-            obj_in=obj_in
+            obj_in=obj_in,
         )
-        return application
 
     async def get_application_for_user(self, user_id: int, application_id: int):
         user = self._repository_telegram_user.get(user_id=user_id)

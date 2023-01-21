@@ -69,7 +69,6 @@ async def change_status(
         callback_query: types.CallbackQuery,
         callback_data: dict,
         application_service: ApplicationService = Provide[Container.application_service],
-        tg_user_service: TelegramUserService = Provide[Container.telegram_user_service]
 ):
     await callback_query.message.delete_reply_markup()
     application_id = callback_data.get("data")
@@ -80,12 +79,10 @@ async def change_status(
     else:
         status = Application.ApplicationStatus.success
         message = "Заявка обработана!"
-    user = await tg_user_service.get_or_create(obj_in=callback_query.from_user.id)
     application = await application_service.update(
         application_id=int(application_id),
+        user_id=callback_query.from_user.id,
         obj_in={
-            "recipient_user_id": user.id,
-            "recipient_user": user,
             "application_status": status
         }
     )
@@ -117,17 +114,14 @@ async def get_comment_send_message(
         message: types.Message,
         state: FSMContext,
         application_service: ApplicationService = Provide[Container.application_service],
-        tg_user_service: TelegramUserService = Provide[Container.telegram_user_service]
 ):
     async with state.proxy() as data:
         application_id = data.get("application_id")
     await message.answer(const.COMMENT_SEND)
-    user = await tg_user_service.get_or_create(obj_in=message.from_user.id)
     application = await application_service.update(
         application_id=int(application_id),
+        user_id=message.from_user.id,
         obj_in={
-            "recipient_user_id": user.id,
-            "recipient_user": user,
             "application_status": Application.ApplicationStatus.return_application
         }
     )
