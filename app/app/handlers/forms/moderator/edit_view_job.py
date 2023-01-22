@@ -5,7 +5,7 @@ from app.loader import bot
 from app.states.base import BaseStates
 from app.states.tgbot_states import EditViewWork
 from app.utils import const, get_data
-from app.utils.const import EDIT_VIEW_WORK, EDIT_SORT, EDIT_SUBSISTEMS_VIEW_WORK, FIO, ROLE, R_TYPE
+from app.utils.const import EDIT_VIEW_WORK, EDIT_SORT, EDIT_SUBSISTEMS_VIEW_WORK, FIO, ROLE
 from dependency_injector.wiring import inject, Provide
 from app.services.application import ApplicationService
 from app.core.container import Container
@@ -67,6 +67,8 @@ async def get_subsystems(query: types.CallbackQuery, state: FSMContext,
                 new_data[i] = None
             await application.update(data['admin'], obj_in=new_data)
             await query.message.answer(const.CHANGE_SUCCESS)
+            ticket = await application.get(data['admin'])
+            await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
             await state.finish()
     await query.answer()
 
@@ -110,14 +112,14 @@ async def correct(query: types.CallbackQuery, state: FSMContext):
         await bot.delete_message(
             query.message.chat.id, query.message.message_id)
         await state.update_data(change='type_work')
-        await query.message.answer('Укажите вид работ',
+        await query.message.answer(EDIT_VIEW_WORK,
                                    reply_markup=kb.exit_kb())
         await state.set_state(EditViewWork.edit)
     elif query.data == '6':
         await bot.delete_message(
             query.message.chat.id, query.message.message_id)
         await state.update_data(change='sort')
-        await query.message.answer('Укажите сортировку',
+        await query.message.answer(EDIT_SORT,
                                    reply_markup=kb.exit_kb())
         await state.set_state(EditViewWork.edit)
     elif query.data == '7':
@@ -169,6 +171,8 @@ async def edit(message: types.Message, state: FSMContext,
                                      obj_in={'application_status': Application.ApplicationStatus.in_work,
                                              'field_three': data['field_three']})
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
         await state.finish()
 
 
@@ -203,6 +207,8 @@ async def get_subsystems_edit(query: types.CallbackQuery, state: FSMContext,
                                      obj_in={'application_status': Application.ApplicationStatus.in_work,
                                              'field_four': data['field_four']})
             await query.message.answer(const.CHANGE_SUCCESS)
+            ticket = await application.get(data['admin'])
+            await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
             await state.finish()
     await query.answer()
 
@@ -224,8 +230,9 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'role': data['role']})
         await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
         await state.finish()
-
 
 
 def register(dp: Dispatcher):

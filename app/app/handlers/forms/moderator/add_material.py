@@ -5,7 +5,7 @@ from app.loader import bot
 from app.states.base import BaseStates
 from app.states.tgbot_states import AddMat
 from app.utils import const, get_data
-from app.utils.const import EDIT_STORAGE, LOAD_DOC, EXCEL_DOC, SURPLUS, LOAD_EXCEL, RESERVE, FIO, ROLE, R_TYPE
+from app.utils.const import EDIT_STORAGE, LOAD_DOC, EXCEL_DOC, SURPLUS, LOAD_EXCEL, RESERVE, FIO, ROLE
 from dependency_injector.wiring import inject, Provide
 from app.services.application import ApplicationService
 from app.core.container import Container
@@ -13,14 +13,17 @@ from app.models.application import Application
 
 
 async def get_note(message: types.Message, state: FSMContext):
-    if message.content_type == 'document':
-        await state.update_data(field_one=message.document.file_id)
+    if message.content_type != 'document' and message.content_type != 'photo':
+        await message.answer(LOAD_DOC)
+        await state.set_state(AddMat.note)
+    else:
+        if message.content_type == 'document':
+            await state.update_data(field_one=message.document.file_id)
+        elif message.content_type == 'photo':
+            await state.update_data(field_one=message.photo[0].file_id)
         await message.answer(EDIT_STORAGE,
                              reply_markup=kb.exit_kb())
         await state.set_state(AddMat.storage)
-    else:
-        await message.answer(LOAD_DOC)
-        await state.set_state(AddMat.note)
 
 
 async def get_storage(message: types.Message, state: FSMContext):
@@ -31,14 +34,17 @@ async def get_storage(message: types.Message, state: FSMContext):
 
 
 async def get_excel(message: types.Message, state: FSMContext):
-    if message.content_type == 'document':
-        await state.update_data(field_three=message.document.file_id)
+    if message.content_type != 'document' and message.content_type != 'photo':
+        await message.answer(LOAD_DOC)
+        await state.set_state(AddMat.excel)
+    else:
+        if message.content_type == 'document':
+            await state.update_data(field_three=message.document.file_id)
+        elif message.content_type == 'photo':
+            await state.update_data(field_three=message.photo[0].file_id)
         new_kb = kb.reserve_or_leave().add(kb.exit_button)
         await message.answer(SURPLUS, reply_markup=new_kb)
         await state.set_state(AddMat.myc)
-    else:
-        await message.answer(LOAD_EXCEL)
-        await state.set_state(AddMat.excel)
 
 
 @inject
@@ -64,6 +70,8 @@ async def get_choise(query: types.CallbackQuery, state: FSMContext,
                                              'field_four': data['field_four'],
                                              'field_five': data['field_five']})
             await query.message.answer(const.CHANGE_SUCCESS)
+            ticket = await application.get(data['admin'])
+            await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
             await state.finish()
 
 
@@ -87,6 +95,8 @@ async def get_obj(message: types.Message, state: FSMContext,
                 new_data[i] = None
             await application.update(data['admin'], obj_in=new_data)
             await message.answer(const.CHANGE_SUCCESS)
+            ticket = await application.get(data['admin'])
+            await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
             await state.finish()
         else:
             await application.update(data['admin'],
@@ -94,6 +104,8 @@ async def get_obj(message: types.Message, state: FSMContext,
                                              'field_four': data['field_four'],
                                              'field_five': data['field_five']})
             await message.answer(const.CHANGE_SUCCESS)
+            ticket = await application.get(data['admin'])
+            await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
             await state.finish()
 
 
@@ -171,11 +183,17 @@ async def edit(message: types.Message, state: FSMContext,
     if point == 'name':
         await state.update_data(name=message.text)
     elif point == 'note':
-        await state.update_data(field_one=message.document.file_id)
+        try:
+            await state.update_data(field_one=message.photo[0].file_id)
+        except:
+            await state.update_data(field_one=message.document.file_id)
     elif point == 'storage':
         await state.update_data(field_two=message.text)
     elif point == 'excel':
-        await state.update_data(field_three=message.document.file_id)
+        try:
+            await state.update_data(field_three=message.photo[0].file_id)
+        except:
+            await state.update_data(field_three=message.document.file_id)
     elif point == 'obj':
         await state.update_data(field_five=message.text)
     data = await state.get_data()
@@ -210,6 +228,8 @@ async def edit(message: types.Message, state: FSMContext,
                                      obj_in={'application_status': Application.ApplicationStatus.in_work,
                                              'field_five': data['field_five']})
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
         await state.finish()
 
 
@@ -230,6 +250,8 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'role': data['role']})
         await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
         await state.finish()
 
 
@@ -242,7 +264,7 @@ def register(dp: Dispatcher):
     dp.register_message_handler(get_obj, state=AddMat.obj)
     dp.register_message_handler(edit,
                                 state=AddMat.edit,
-                                content_types=['text', 'document'])
+                                content_types=['any'])
     dp.register_callback_query_handler(get_choise, state=AddMat.myc)
     dp.register_callback_query_handler(correct, state=AddMat.sure)
     dp.register_callback_query_handler(get_role, state=AddMat.edit)

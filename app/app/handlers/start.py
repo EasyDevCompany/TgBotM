@@ -1,8 +1,8 @@
+import os
+
 from aiogram.types import InputFile
 from dependency_injector.wiring import inject, Provide
 import re
-import pathlib
-from pathlib import Path
 
 from app.core.container import Container
 from app.models.application import Application
@@ -15,13 +15,14 @@ from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import CommandStart
 
-from app.utils import const
+from app.utils import const, get_data
 import app.keyboards.inline_keyboard as kb
 from app.loader import bot
 from app.states.base import BaseStates
 import app.states.tgbot_states as my_states
 from logger import logger
-from app.utils.const import EDIT_POINT, FIO, ROLE, ERROR_CONTACT, R_TYPE, WAITING_ANSWER
+from app.utils.const import EDIT_POINT, FIO, ROLE, ERROR_CONTACT, R_TYPE, WAITING_ANSWER, NEW_BID
+from app.models.telegram_user import UserType
 
 
 async def cancel(query: types. CallbackQuery, state: FSMContext):
@@ -49,24 +50,33 @@ async def edit_data(query: types.CallbackQuery, state: FSMContext):
 @inject
 async def send_ticket(query: types.CallbackQuery,
                       state: FSMContext,
-                      application: ApplicationService = Provide[Container.application_service]):
+                      application: ApplicationService = Provide[Container.application_service],
+                      tg_user: TelegramUserService = Provide[Container.telegram_user_service]):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     data = await state.get_data()
     if 'change' in data:
         del data['change']
     if 'message_id' in data:
         del data['message_id']
-    await application.create(
+    ticket = await application.create(
         user_id=query.from_user.id,
         obj_in=data
     )
-    await state.finish()
+    if data['request_answered'] == UserType.technical_support:
+        ids = await tg_user.users_list(user_type='moder')
+        await get_data.send_data_channel(channel='support', ticket=ticket)
+    elif data['request_answered'] == UserType.administrator:
+        ids = await tg_user.users_list(user_type='admin')
+        await get_data.send_data_channel(channel='admin', ticket=ticket)
+    for id in ids:
+        await bot.send_message(id, NEW_BID)
     await query.message.answer(
         WAITING_ANSWER)
     await query.message.answer(
         const.START_MESSAGE,
         reply_markup=kb.start_work
     )
+    await state.finish()
 
 
 @inject
@@ -77,7 +87,7 @@ async def test_func(
     user_id = message.from_user.id
     await application_service.create(obj_in={
             "role": Application.Role.curator,
-            "request_answered": Application.RequestAnswered.moderator,
+            "request_answered": UserType.technical_support,
             "request_type": Application.RequestType.add_edo,
             "field_one": "test",
             "field_two": "test",
@@ -99,7 +109,7 @@ async def start(
             "username": message.from_user.username,
             "first_name": message.from_user.first_name,
             "last_name": message.from_user.last_name,
-            "user_type": TelegramUser.UserType.employee
+            "user_type": UserType.employee
         }
     )
     await message.answer(
@@ -145,27 +155,26 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
         await state.update_data(
             request_type=Application.RequestType.add_subobject)
         await state.update_data(
-            request_answered=Application.RequestAnswered.moderator)
+            request_answered=UserType.technical_support)
         new_kb = kb.add_subobjects_kb().add(kb.exit_button)
         await query.message.answer(const.ADD_SUBOBJECTS)
         await query.message.answer(const.SET_CHAPTER,
                                    reply_markup=new_kb)
         await state.set_state(my_states.AddObj.chapter)
     elif query.data == 'change_status':
-        path = Path(pathlib.Path.cwd(), "Смена статуса заявки.docx")
         await state.update_data(
             request_type=Application.RequestType.change_status_application)
         await state.update_data(
-            request_answered=Application.RequestAnswered.moderator)
+            request_answered=UserType.technical_support)
         await query.message.answer(const.CHANGE_STATUS_APPLICATION)
-        await query.message.answer_document(InputFile(path))
+        await query.message.answer_document(InputFile(r'app/docs/Смена статуса заявки.docx'))
         await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
         await state.set_state(my_states.ChangeStatus.note)
     elif query.data == 'edit_type_work':
         await state.update_data(
             request_type=Application.RequestType.edit_view_job)
         await state.update_data(
-            request_answered=Application.RequestAnswered.moderator)
+            request_answered=UserType.technical_support)
         await query.message.answer(const.EDIT_TYPE_WORK)
         await query.message.answer(const.EDIT_SUBOBJECT_TYPE_WORK,
                                    reply_markup=kb.exit_kb())
@@ -174,7 +183,7 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
         await state.update_data(
             request_type=Application.RequestType.add_view_job)
         await state.update_data(
-            request_answered=Application.RequestAnswered.moderator)
+            request_answered=UserType.technical_support)
         await query.message.answer(const.ADD_TYPE_WORK)
         await query.message.answer(const.SELECT_SUBOBJECT,
                                    reply_markup=kb.exit_kb())
@@ -183,7 +192,7 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
         await state.update_data(
             request_type=Application.RequestType.conversion_factor)
         await state.update_data(
-            request_answered=Application.RequestAnswered.moderator)
+            request_answered=UserType.technical_support)
         await query.message.answer(const.CONVERSION_FACTOR)
         await query.message.answer(
             const.UPDATE_COEF, reply_markup=kb.exit_kb())
@@ -192,18 +201,17 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
         await state.update_data(
             request_type=Application.RequestType.warehouse_adjustments)
         await state.update_data(
-            request_answered=Application.RequestAnswered.moderator)
+            request_answered=UserType.technical_support)
         await query.message.answer(const.UPDATE_STORAGE)
         await query.message.answer(const.NUMBER_BID, reply_markup=kb.exit_kb())
         await state.set_state(my_states.UpdateStorage.number_bid)
     elif query.data == 'add_names':
-        path = Path(pathlib.Path.cwd(), "шаблон_добавления_наименований_материалов_в_ЭДО.xlsx")
         await state.update_data(
             request_type=Application.RequestType.add_naming)
         await state.update_data(
-            request_answered=Application.RequestAnswered.moderator)
+            request_answered=UserType.technical_support)
         await query.message.answer(const.ADD_NAMING)
-        await query.message.answer_document(InputFile(path))
+        await query.message.answer_document(InputFile(r'app/docs/шаблон_добавления_наименований_материалов_в_ЭДО.xlsx'))
         await query.message.answer(const.SECTION_MATERIAL,
                                    reply_markup=kb.exit_kb())
         await state.set_state(my_states.AddNaming.section_material)
@@ -211,69 +219,62 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
         await state.update_data(
             request_type=Application.RequestType.edit_subobject)
         await state.update_data(
-            request_answered=Application.RequestAnswered.moderator)
+            request_answered=UserType.technical_support)
         await query.message.answer(const.EDIT_SUBOBJECT)
         await query.message.answer(const.SELECT_SUBOBJECT,
                                    reply_markup=kb.exit_kb())
         await state.set_state(my_states.UpdateSubObject.select_subobject)
     elif query.data == 'add_materials':
-        path1 = Path(pathlib.Path.cwd(), "добавление_материалов_на_свободный_остаток.docx")
-        path2 = Path(pathlib.Path.cwd(), "добавление_материалов_на_свободный_остаток.xlsx")
         await state.update_data(
             request_type=Application.RequestType.add_material)
         await state.update_data(
-            request_answered=Application.RequestAnswered.moderator)
+            request_answered=UserType.technical_support)
         await query.message.answer(const.ADD_MATERIALS)
-        await query.message.answer_document(InputFile(path1))
-        await query.message.answer_document(InputFile(path2))
+        await query.message.answer_document(InputFile(r'app/docs/добавление_материалов_на_свободный_остаток.docx'))
+        await query.message.answer_document(InputFile(r'app/docs/добавление_материалов_на_свободный_остаток.xlsx'))
         await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
         await state.set_state(my_states.AddMat.note)
     elif query.data == 'add_EDO':
-        path = Path(pathlib.Path.cwd(), "Добавление объекта в ЭДО.docx")
         await state.update_data(request_type=Application.RequestType.add_edo)
         await state.update_data(
-            request_answered=Application.RequestAnswered.admin)
+            request_answered=UserType.administrator)
         await query.message.answer(const.ADD_EDO)
-        await query.message.answer_document(InputFile(path))
+        await query.message.answer_document(InputFile(r'app/docs/Добавление объекта в ЭДО.docx'))
         await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
         await state.set_state(my_states.AddObjAdm.note)
     elif query.data == 'open_access':
-        path = Path(pathlib.Path.cwd(), "Открытие доступов в ЭДО для сотрудников.docx")
         await state.update_data(request_type=Application.RequestType.open_edo)
         await state.update_data(
-            request_answered=Application.RequestAnswered.admin)
+            request_answered=UserType.administrator)
         await query.message.answer(const.OPEN_EDO)
-        await query.message.answer_document(InputFile(path))
+        await query.message.answer_document(InputFile(r'app/docs/Открытие доступов в ЭДО для сотрудников.docx'))
         await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
         await state.set_state(my_states.OpenAcs.note)
     elif query.data == 'edit_incorrect_move_admin':
-        path = Path(pathlib.Path.cwd(), "Редактирование некорректного перемещения.docx")
         await state.update_data(
             request_type=Application.RequestType.edit_some_moving)
         await state.update_data(
-            request_answered=Application.RequestAnswered.admin)
+            request_answered=UserType.administrator)
         await query.message.answer(const.EDIT_MOV)
-        await query.message.answer_document(InputFile(path))
+        await query.message.answer_document(InputFile(r'app/docs/Редактирование некорректного перемещения.docx'))
         await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
         await state.set_state(my_states.EditMoveAdm.note)
     elif query.data == 'edit_shipment':
-        path = Path(pathlib.Path.cwd(), "Корректировка поставок.docx")
         await state.update_data(
             request_type=Application.RequestType.adjustment_of_supplies)
         await state.update_data(
-            request_answered=Application.RequestAnswered.admin)
+            request_answered=UserType.administrator)
         await query.message.answer(const.EDIT_SHIP)
-        await query.message.answer_document(InputFile(path))
+        await query.message.answer_document(InputFile(r'app/docs/Корректировка поставок.docx'))
         await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
         await state.set_state(my_states.EditShpmnt.note)
     elif query.data == 'adjustment_invoice':
-        path = Path(pathlib.Path.cwd(), "Корректировка оформленной накладной.docx")
         await state.update_data(
             request_type=Application.RequestType.adjustment_invoice)
         await state.update_data(
-            request_answered=Application.RequestAnswered.moderator)
+            request_answered=UserType.technical_support)
         await query.message.answer(const.ADJ_INVOICE)
-        await query.message.answer_document(InputFile(path))
+        await query.message.answer_document(InputFile(r'app/docs/Корректировка оформленной накладной.docx'))
         await query.message.answer(const.NOTE, reply_markup=kb.exit_kb())
         await state.set_state(my_states.AdjInv.note)
 

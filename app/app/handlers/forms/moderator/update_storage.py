@@ -8,7 +8,7 @@ from app.states.base import BaseStates
 from app.states.tgbot_states import UpdateStorage
 from app.utils import const, get_data
 from app.utils.const import EDIT_NEW_STORAGE, REQUEST_NUMBER, EDIT_CONTACT_NAME, EDIT_ADDRESS, ERROR_CONTACT, \
-    ADDRESS_ERROR, FIO, ROLE, R_TYPE
+    ADDRESS_ERROR, FIO, ROLE
 from dependency_injector.wiring import inject, Provide
 from app.services.application import ApplicationService
 from app.core.container import Container
@@ -69,6 +69,8 @@ async def get_address(message: types.Message, state: FSMContext,
             logger.info(new_data)
             await application.update(data['admin'], obj_in=new_data)
             await message.answer(const.CHANGE_SUCCESS)
+            ticket = await application.get(data['admin'])
+            await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
             await state.finish()
     else:
         await message.answer(ADDRESS_ERROR)
@@ -178,6 +180,8 @@ async def edit(message: types.Message, state: FSMContext,
                                      obj_in={'application_status': Application.ApplicationStatus.in_work,
                                              'field_four': data['field_four']})
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
         await state.finish()
 
 
@@ -198,6 +202,8 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'role': data['role']})
         await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
         await state.finish()
 
 

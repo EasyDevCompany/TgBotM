@@ -5,7 +5,7 @@ from app.loader import bot
 from app.states.base import BaseStates
 from app.states.tgbot_states import AddCoef
 from app.utils import const, get_data
-from app.utils.const import EDIT_NEW_OLD, RATIO_OLD_NEW, UNIT_ERROR, RATIO_ERROR, FIO, ROLE, R_TYPE
+from app.utils.const import EDIT_NEW_OLD, RATIO_OLD_NEW, UNIT_ERROR, RATIO_ERROR, FIO, ROLE
 from dependency_injector.wiring import inject, Provide
 from app.services.application import ApplicationService
 from app.core.container import Container
@@ -49,6 +49,8 @@ async def get_ratio(message: types.Message, state: FSMContext,
                 new_data[i] = None
             await application.update(data['admin'], obj_in=new_data)
             await message.answer(const.CHANGE_SUCCESS)
+            ticket = await application.get(data['admin'])
+            await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
             await state.finish()
     else:
         await message.answer(RATIO_ERROR)
@@ -144,6 +146,8 @@ async def edit(message: types.Message, state: FSMContext,
                                      obj_in={'application_status': Application.ApplicationStatus.in_work,
                                              'field_three': data['field_three']})
         await message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
         await state.finish()
 
 
@@ -164,6 +168,8 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
                                  obj_in={'application_status': Application.ApplicationStatus.in_work,
                                          'role': data['role']})
         await query.message.answer(const.CHANGE_SUCCESS)
+        ticket = await application.get(data['admin'])
+        await bot.send_message(ticket.recipient_user.user_id, f'{const.USER_EDIT_TICKET}' + f' №Т{ticket.id}')
         await state.finish()
 
 

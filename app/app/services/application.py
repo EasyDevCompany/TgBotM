@@ -1,3 +1,4 @@
+from app.models.telegram_user import UserType
 from app.repository.telegarm_user import RepositoryTelegramUser
 from app.repository.application import ApplicationRepository
 from app.models.application import Application
@@ -27,7 +28,7 @@ class ApplicationService:
     async def get(self, application_id: int):
         return self._repository_application.get(id=application_id)
 
-    async def applications_for(self, roles: Application.RequestAnswered):
+    async def applications_for(self, roles: UserType):
         return self._repository_application.list(
             request_answered=roles
         )
@@ -43,10 +44,22 @@ class ApplicationService:
             commit=True
         )
 
+    async def get_application_for_user(self, user_id: int, application_id: int):
+        user = self._repository_telegram_user.get(user_id=user_id)
+        application = self._repository_application.get(id=application_id)
+        if (application is None) or (user.user_type != application.request_answered):
+            return None
+        return application
+
     async def delete(self, application_id: int):
         db_obj = self._repository_application.get(id=application_id)
         return self._repository_application.delete(db_obj=db_obj,
                                                    commit=True)
+
+    async def application_for_user(self, user_id: int):
+        user = self._repository_telegram_user.get(user_id=user_id)
+        return self._repository_application.list(sender_user_id=user.id)
+
 
     # async def check_application(self) -> bool:
     #     app = self._repository_application.check_not_success()
