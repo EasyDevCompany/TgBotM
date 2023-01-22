@@ -261,6 +261,8 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
 
 
 def register(dp: Dispatcher):
+    dp.register_callback_query_handler(skip, text='skip', state=[AddNaming.add_several_naming,
+                                                                    AddNaming.edit])
     dp.register_callback_query_handler(get_role, state=AddNaming.edit)
     dp.register_message_handler(get_section_material,
                                 state=AddNaming.section_material)
@@ -278,7 +280,4 @@ def register(dp: Dispatcher):
     dp.register_message_handler(edit,
                                 state=AddNaming.edit,
                                 content_types=['any'])
-    dp.register_callback_query_handler(skip, state=[AddNaming.add_several_naming,
-                                                    AddNaming.edit])
     dp.register_callback_query_handler(correct, state=AddNaming.sure)
-    
