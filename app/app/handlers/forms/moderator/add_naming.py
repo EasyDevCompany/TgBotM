@@ -10,7 +10,7 @@ from dependency_injector.wiring import inject, Provide
 from app.services.application import ApplicationService
 from app.core.container import Container
 from app.models.application import Application
-from logger import logger
+from loguru import logger
 
 
 @inject
@@ -247,6 +247,8 @@ async def get_role(query: types.CallbackQuery, state: FSMContext,
 
 
 def register(dp: Dispatcher):
+    dp.register_callback_query_handler(skip, state=[AddNaming.add_several_naming,
+                                                    AddNaming.edit])
     dp.register_callback_query_handler(get_role, state=AddNaming.edit)
     dp.register_message_handler(get_section_material,
                                 state=AddNaming.section_material)
@@ -264,7 +266,5 @@ def register(dp: Dispatcher):
     dp.register_message_handler(edit,
                                 state=AddNaming.edit,
                                 content_types=['text', 'document'])
-    dp.register_callback_query_handler(skip, state=[AddNaming.add_several_naming,
-                                                    AddNaming.edit])
     dp.register_callback_query_handler(correct, state=AddNaming.sure)
-    
+
