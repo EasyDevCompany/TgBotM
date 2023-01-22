@@ -41,6 +41,7 @@ class ApplicationService:
         return self._repository_application.update(
             db_obj=self._repository_application.get(id=application_id),
             obj_in=obj_in,
+            commit=True
         )
 
     async def get_application_for_user(self, user_id: int, application_id: int):

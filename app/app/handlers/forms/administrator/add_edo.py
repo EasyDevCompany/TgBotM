@@ -17,7 +17,7 @@ from loguru import logger
 
 
 async def get_note(message: types.Message, state: FSMContext):
-    if message.content_type != 'document' or message.content_type != 'photo':
+    if message.content_type != 'document' and message.content_type != 'photo':
         await message.answer(LOAD_DOC)
         await state.set_state(AddObjAdm.note)
     else:
@@ -25,6 +25,9 @@ async def get_note(message: types.Message, state: FSMContext):
             await state.update_data(field_one=message.document.file_id)
         elif message.content_type == 'photo':
             await state.update_data(field_one=message.photo[0].file_id)
+        await message.answer(NAME_OBJECT,
+                             reply_markup=kb.exit_kb())
+        await state.set_state(AddObjAdm.obj_name)
 
 
 async def get_obj_name(message: types.Message, state: FSMContext):
