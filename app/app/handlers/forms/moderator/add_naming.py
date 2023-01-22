@@ -278,7 +278,7 @@ def register(dp: Dispatcher):
     dp.register_message_handler(edit,
                                 state=AddNaming.edit,
                                 content_types=['any'])
-    dp.register_callback_query_handler(skip, state=[AddNaming.add_several_naming,
+    dp.register_callback_query_handler(skip, text='skip', state=[AddNaming.add_several_naming,
                                                     AddNaming.edit])
     dp.register_callback_query_handler(correct, state=AddNaming.sure)
     
