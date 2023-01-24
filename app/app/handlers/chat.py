@@ -152,7 +152,7 @@ async def admin(message: types.Message,
                 application: ApplicationService = Provide[Container.application_service],
                 tg_user_service: TelegramUserService = Provide[Container.telegram_user_service]):
     user_id = message.from_user.id
-    if not await tg_user_service.user_permission(user_id=user_id):
+    if not await tg_user_service.check_permission_for_user(user_id=user_id, user_type=UserType.administrator):
         return await message.answer(const.HASE_NOT_PERMISSION)
     tickets = await application.applications_for(
         UserType.administrator)
@@ -162,9 +162,10 @@ async def admin(message: types.Message,
             if ticket.application_status != Application.ApplicationStatus.success and str(
                     ticket.recipient_user.user_id) == str(message.from_user.id):
                 new_tickets.append(ticket)
-    await kb.admin_btns_tickets(message=message, tickets=new_tickets)
-    # except:
-    #     await message.answer('Нет новых заявок')
+    try:
+        await kb.admin_btns_tickets(message=message, tickets=new_tickets)
+    except:
+        await message.answer(const.NO_NEW_BIDS)
 
 
 @inject
@@ -172,20 +173,20 @@ async def moder(message: types.Message,
                 application: ApplicationService = Provide[Container.application_service],
                 tg_user_service: TelegramUserService = Provide[Container.telegram_user_service]):
     user_id = message.from_user.id
-    if not await tg_user_service.user_permission(user_id=user_id):
+    if not await tg_user_service.check_permission_for_user(user_id=user_id, user_type=UserType.technical_support):
         return await message.answer(const.HASE_NOT_PERMISSION)
+    tickets = await application.applications_for(
+        UserType.technical_support)
+    new_tickets = []
+    for ticket in tickets:
+        if ticket.recipient_user is not None:
+            if ticket.application_status != Application.ApplicationStatus.success and str(
+                    ticket.recipient_user.user_id) == str(message.from_user.id):
+                new_tickets.append(ticket)
     try:
-        tickets = await application.applications_for(
-            UserType.technical_support)
-        new_tickets = []
-        for ticket in tickets:
-            if ticket.recipient_user is not None:
-                if ticket.application_status != Application.ApplicationStatus.success and str(
-                        ticket.recipient_user.user_id) == str(message.from_user.id):
-                    new_tickets.append(ticket)
         await kb.moder_btns_tickets(message=message, tickets=new_tickets)
     except:
-        await message.answer(NO_NEW_BIDS)
+        await message.answer(const.NO_NEW_BIDS)
 
 
 @inject
