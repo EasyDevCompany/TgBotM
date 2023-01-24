@@ -151,8 +151,8 @@ async def get_comment_send_message(
 async def admin(message: types.Message,
                 application: ApplicationService = Provide[Container.application_service],
                 tg_user_service: TelegramUserService = Provide[Container.telegram_user_service]):
-    user_id = message.from_user.id
-    if not await tg_user_service.check_permission_for_user(user_id=user_id, user_type=UserType.administrator):
+    if not await tg_user_service.check_permission_for_user(user_id=message.from_user.id,
+                                                           user_type=UserType.administrator):
         return await message.answer(const.HASE_NOT_PERMISSION)
     tickets = await application.applications_for(
         UserType.administrator)
@@ -172,8 +172,8 @@ async def admin(message: types.Message,
 async def moder(message: types.Message,
                 application: ApplicationService = Provide[Container.application_service],
                 tg_user_service: TelegramUserService = Provide[Container.telegram_user_service]):
-    user_id = message.from_user.id
-    if not await tg_user_service.check_permission_for_user(user_id=user_id, user_type=UserType.technical_support):
+    if not await tg_user_service.check_permission_for_user(user_id=message.from_user.id,
+                                                           user_type=UserType.technical_support):
         return await message.answer(const.HASE_NOT_PERMISSION)
     tickets = await application.applications_for(
         UserType.technical_support)
