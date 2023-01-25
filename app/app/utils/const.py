@@ -53,3 +53,20 @@ MESSAGE_FOR_SENDER_IF_RETURN = """
 {eight}
 {nine}
 """
+
+CHOOSE_FIELD = """
+Выберите поле, которое хотите отредактировать:
+"""
+
+WHAT_EDIT = """
+Исправьте выбранное вами поле в соответсвии с комментарием:
+"""
+
+CHANGE_SAVED = """
+Изменения сохранены!
+"""
+
+SENDER_CHANGE_APPLICATION_MESSAGE = """
+Заявитель внес изменения в заявку, просмотрите!
+ID заявки: {application_id}
+"""

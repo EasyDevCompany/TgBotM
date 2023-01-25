@@ -7,3 +7,8 @@ class GetApplication(StatesGroup):
 
 class GetComment(StatesGroup):
     comment = State()
+
+
+class EditApplication(StatesGroup):
+    field = State()
+    new_text = State()
