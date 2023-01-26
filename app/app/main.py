@@ -8,6 +8,7 @@ from app import middlewares
 from app.models.telegram_user import TelegramUser
 from app.models.application import Application
 from app.models.user import User
+from app.utils import get_data
 
 from app.handlers import start, chat
 import handlers.forms.moderator as moderator
@@ -54,5 +55,6 @@ if __name__ == "__main__":
                             moderator.conversion_factor,
                             moderator.edit_subobject,
                             moderator.edit_view_job,
-                            moderator.update_storage])
+                            moderator.update_storage,
+                            get_data])
     executor.start_polling(dp, skip_updates=True)

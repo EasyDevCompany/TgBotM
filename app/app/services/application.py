@@ -28,6 +28,9 @@ class ApplicationService:
     async def get(self, application_id: int):
         return self._repository_application.get(id=application_id)
 
+    async def get_last(self):
+        return self._repository_application.get()
+
     async def applications_for(self, roles: UserType):
         return self._repository_application.list(
             request_answered=roles

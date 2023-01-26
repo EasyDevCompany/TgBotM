@@ -12,7 +12,9 @@ from app.models.application import Application
 from app.core.container import Container
 
 
-async def send_data(state, query=None, message=None):
+@inject
+async def send_data(state, query=None, message=None,
+                    application: ApplicationService = Provide[Container.application_service]):
     data = await state.get_data()
     if 'change' in data:
         del data['change']
@@ -20,12 +22,27 @@ async def send_data(state, query=None, message=None):
         del data['message_id']
     except:
         pass
+    last_ticket = await application.get_last()
+    try:
+        if data['request_answered'] == 'administrator':
+            ticket_id = f'А{last_ticket.id + 1}'
+        else:
+            ticket_id = f'Т{last_ticket.id + 1}'
+    except:
+        if data['request_answered'] == 'administrator':
+            ticket_id = 'А1'
+        else:
+            ticket_id = 'Т1'
     msg = ''
     list_of_val = []
     for i in data.values():
         if i != 'technical_support' and i != 'administrator':
             list_of_val.append(i)
-    for i, v in enumerate(list_of_val):
+    msg += (f'Уникальный ID заявки: {ticket_id}\n'
+            f'ФИО: {data["name"]}\n'
+            f'Ваша роль: {data["role"]}\n'
+            f'Тип заявки: {data["request_type"]}\n')
+    for i, v in enumerate(list_of_val[3:]):
         msg += f'{i+1}: {v}\n'
     if query is not None:
         if data['request_type'] in ['Смена статуса заявки',
@@ -110,28 +127,28 @@ async def send_data(state, query=None, message=None):
 async def send_data_channel(channel=None, ticket=None, user_id=None, state=None, edit=False):
     msg = ''
     if channel == 'admin':
-        msg += 'А' + f'{ticket.id}\n'
+        msg += 'Уникальный ID заявки: А' + f'{ticket.id}\n'
     elif channel == 'support':
-        msg += 'Т' + f'{ticket.id}\n'
-    msg += f'1){ticket.name}\n'
-    msg += f'2){ticket.role}\n'
-    msg += f'3){ticket.request_type}\n'
-    msg += f'4){ticket.field_one}\n'
-    msg += f'5){ticket.field_two}\n'
+        msg += 'Уникальный ID заявки: Т' + f'{ticket.id}\n'
+    msg += f'ФИО: {ticket.name}\n'
+    msg += f'Роль: {ticket.role}\n'
+    msg += f'Тип заявки: {ticket.request_type}\n'
+    msg += f'1){ticket.field_one}\n'
+    msg += f'2){ticket.field_two}\n'
     if ticket.field_three is not None:
-        msg += f'6){ticket.field_three}\n'
+        msg += f'3){ticket.field_three}\n'
     if ticket.field_four is not None:
-        msg += f'7){ticket.field_four}\n'
+        msg += f'4){ticket.field_four}\n'
     if ticket.field_five is not None:
-        msg += f'8){ticket.field_five}\n'
+        msg += f'5){ticket.field_five}\n'
     if ticket.field_six is not None:
-        msg += f'9){ticket.field_six}\n'
+        msg += f'6){ticket.field_six}\n'
     if ticket.field_seven is not None:
-        msg += f'10){ticket.field_seven}\n'
+        msg += f'7){ticket.field_seven}\n'
     if ticket.field_eight is not None:
-        msg += f'11){ticket.field_eight}\n'
+        msg += f'8){ticket.field_eight}\n'
     if ticket.field_nine is not None:
-        msg += f'12){ticket.field_nine}\n'
+        msg += f'9){ticket.field_nine}\n'
     if ticket.request_type == 'Корректировка поставок':
         if ticket.field_seven != const.NO_EXTRA:
             if user_id is not None:

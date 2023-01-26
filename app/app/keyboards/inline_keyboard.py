@@ -477,26 +477,26 @@ async def admin_btns_tickets(message, tickets, page=1):
                                    id=f'{tickets[page - 1].id}',
                                    user_id=f'{tickets[page - 1].sender_user.user_id}')))
     msg = ''
-    msg += f'A{tickets[page - 1].id}\n'
-    msg += f'1){tickets[page - 1].name}\n'
-    msg += f'2){tickets[page - 1].role}\n'
-    msg += f'3){tickets[page - 1].request_type}\n'
-    msg += f'4){tickets[page - 1].field_one}\n'
-    msg += f'5){tickets[page - 1].field_two}\n'
+    msg += f'Уникальный ID заявки: A{tickets[page - 1].id}\n'
+    msg += f'ФИО: {tickets[page - 1].name}\n'
+    msg += f'Роль: {tickets[page - 1].role}\n'
+    msg += f'Тип заявки: {tickets[page - 1].request_type}\n'
+    msg += f'1){tickets[page - 1].field_one}\n'
+    msg += f'2){tickets[page - 1].field_two}\n'
     if tickets[page - 1].field_three is not None:
-        msg += f'6){tickets[page - 1].field_three}\n'
+        msg += f'3){tickets[page - 1].field_three}\n'
     if tickets[page - 1].field_four is not None:
-        msg += f'7){tickets[page - 1].field_four}\n'
+        msg += f'4){tickets[page - 1].field_four}\n'
     if tickets[page - 1].field_five is not None:
-        msg += f'8){tickets[page - 1].field_five}\n'
+        msg += f'5){tickets[page - 1].field_five}\n'
     if tickets[page - 1].field_six is not None:
-        msg += f'9){tickets[page - 1].field_six}\n'
+        msg += f'6){tickets[page - 1].field_six}\n'
     if tickets[page - 1].field_seven is not None:
-        msg += f'10){tickets[page - 1].field_seven}\n'
+        msg += f'7){tickets[page - 1].field_seven}\n'
     if tickets[page - 1].field_eight is not None:
-        msg += f'11){tickets[page - 1].field_eight}\n'
+        msg += f'8){tickets[page - 1].field_eight}\n'
     if tickets[page - 1].field_nine is not None:
-        msg += f'12){tickets[page - 1].field_nine}\n'
+        msg += f'9){tickets[page - 1].field_nine}\n'
     if tickets[page - 1].request_type == 'Корректировка поставок':
         if tickets[page - 1].field_seven != main_const.NO_EXTRA:
             try:
@@ -540,26 +540,26 @@ async def moder_btns_tickets(message, tickets, page=1):
                                    id=f'{tickets[page - 1].id}',
                                    user_id=f'{tickets[page - 1].sender_user.user_id}')))
     msg = ''
-    msg += f'T{tickets[page - 1].id}\n'
-    msg += f'1){tickets[page - 1].name}\n'
-    msg += f'2){tickets[page - 1].role}\n'
-    msg += f'3){tickets[page - 1].request_type}\n'
-    msg += f'4){tickets[page - 1].field_one}\n'
-    msg += f'5){tickets[page - 1].field_two}\n'
+    msg += f'Уникальный ID заявки: T{tickets[page - 1].id}\n'
+    msg += f'ФИО: {tickets[page - 1].name}\n'
+    msg += f'Роль: {tickets[page - 1].role}\n'
+    msg += f'Тип заявки: {tickets[page - 1].request_type}\n'
+    msg += f'1){tickets[page - 1].field_one}\n'
+    msg += f'2){tickets[page - 1].field_two}\n'
     if tickets[page - 1].field_three is not None:
-        msg += f'6){tickets[page - 1].field_three}\n'
+        msg += f'3){tickets[page - 1].field_three}\n'
     if tickets[page - 1].field_four is not None:
-        msg += f'7){tickets[page - 1].field_four}\n'
+        msg += f'4){tickets[page - 1].field_four}\n'
     if tickets[page - 1].field_five is not None:
-        msg += f'8){tickets[page - 1].field_five}\n'
+        msg += f'5){tickets[page - 1].field_five}\n'
     if tickets[page - 1].field_six is not None:
-        msg += f'9){tickets[page - 1].field_six}\n'
+        msg += f'6){tickets[page - 1].field_six}\n'
     if tickets[page - 1].field_seven is not None:
-        msg += f'10){tickets[page - 1].field_seven}\n'
+        msg += f'7){tickets[page - 1].field_seven}\n'
     if tickets[page - 1].field_eight is not None:
-        msg += f'11){tickets[page - 1].field_eight}\n'
+        msg += f'8){tickets[page - 1].field_eight}\n'
     if tickets[page - 1].field_nine is not None:
-        msg += f'12){tickets[page - 1].field_nine}\n'
+        msg += f'9){tickets[page - 1].field_nine}\n'
     if tickets[page - 1].request_type == 'Добавление материалов на свободный остаток':
         try:
             await message.answer_photo(tickets[page - 1].field_one)
