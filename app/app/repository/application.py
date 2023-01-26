@@ -3,6 +3,7 @@ from .base import RepositoryBase
 from sqlalchemy import or_
 
 
+
 class ApplicationRepository(RepositoryBase[Application]):
     pass
     # def check_not_success(self, user_id: int):

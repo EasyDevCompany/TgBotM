@@ -45,6 +45,13 @@ async def application(application_id: int):
 
     return keyboard
 
+cancel_keyboard = types.InlineKeyboardMarkup(row_width=1).add(
+    types.InlineKeyboardButton(
+        callback_data='cancel',
+        text='Отменить'
+    )
+)
+
 
 async def edit(application_id: int):
     keyboard = types.InlineKeyboardMarkup(row_width=1)
@@ -58,6 +65,17 @@ async def edit(application_id: int):
         )
     )
 
+
+async def edit_field(field_count: int):
+    keyboard = types.InlineKeyboardMarkup(row_width=1)
+    for field_num in range(1, field_count + 1):
+        keyboard.add(
+            types.InlineKeyboardButton(
+                text=f"{field_num}",
+                callback_data=f"{field_num}"
+                )
+            )
+    return keyboard
 
 start_support = InlineKeyboardMarkup().add(
     InlineKeyboardButton(
