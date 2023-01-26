@@ -50,9 +50,10 @@ class ApplicationService:
     async def get_application_for_user(self, user_id: int, application_id: int):
         user = self._repository_telegram_user.get(user_id=user_id)
         application = self._repository_application.get(id=application_id)
-        if (application is None) or (user.user_type != application.request_answered):
-            return None
-        return application
+        if (application is not None) and (user.user_type == application.request_answered or
+                                          user.user_type == UserType.super_user):
+            return application
+        return None
 
     async def delete(self, application_id: int):
         db_obj = self._repository_application.get(id=application_id)

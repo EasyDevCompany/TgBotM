@@ -17,6 +17,7 @@ class UserType(str, enum.Enum):
     employee = "employee"
     technical_support = "technical_support"
     administrator = "administrator"
+    super_user = "super_user"
 
 
 class TelegramUser(Base):

@@ -1,6 +1,7 @@
 from app.models.telegram_user import TelegramUser, UserType
 from app.repository.telegarm_user import RepositoryTelegramUser
 from typing import Any
+from loguru import logger
 
 
 class TelegramUserService:
@@ -28,13 +29,15 @@ class TelegramUserService:
         return ids
 
     async def user_permission(self, user_id: int) -> bool:
-        user = self._repository_telegram_user.check_permission(user_id=user_id)
+        user = self._repository_telegram_user.check_permission_for_one_application(user_id=user_id)
+        logger.info(user)
         if user is None:
             return False
         return True
 
     async def check_permission_for_user(self, user_id: int, user_type) -> bool:
-        user = self._repository_telegram_user.get(user_id=user_id, user_type=user_type)
+        # user = self._repository_telegram_user.get(user_id=user_id, user_type=user_type)
+        user = self._repository_telegram_user.check_permission(user_id=user_id, status=user_type)
         if user is None:
             return False
         return True
