@@ -32,6 +32,11 @@ async def cancel(query: types. CallbackQuery, state: FSMContext):
     await query.answer()
 
 
+async def command_cancel(message: types.Message, state: FSMContext):
+    await state.finish()
+    await message.answer(const.START_MESSAGE, reply_markup=kb.start_work)
+
+
 async def edit_data(query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(query.message.chat.id, query.message.message_id)
     data = await state.get_data()
@@ -281,6 +286,7 @@ async def get_request_type(query: types.CallbackQuery, state: FSMContext):
 
 def register_start_handler(dp: Dispatcher):
     dp.register_message_handler(start, CommandStart())
+    dp.register_message_handler(command_cancel, commands=['cancel'], state='*')
     dp.register_callback_query_handler(create_ticket, text='start_work')
     dp.register_callback_query_handler(cancel, text='exit', state='*')
     dp.register_callback_query_handler(edit_data, text='edit', state='*')
